@@ -1,12 +1,12 @@
 {
-    "name": "ride/web-cms",
-    "description": "CMS application of the Ride framework",
+    "name": "ride/wba-assets",
+    "description": "Ride asset library",
     "license": "MIT",
     "version": "pla",
     "authors": [
         {
-            "name": "Joris Vandeweerd",
-            "email": "joris@statik.be"
+            "name": "Ward brems",
+            "email": "ward@statik.be"
         }
     ],
     "require": {
@@ -27,7 +27,7 @@
         "ride/lib-widget": ">=0.1.1",
         "ride/web": ">=0.2.4",
         "ride/web-base": ">=0.1.0"
-    }, 
+    },
     "autoload": {
         "psr-0": {
             "ride\\web\\cms\\": ["src/"]
