@@ -1,16 +1,16 @@
 <?php
 
-namespace ride\web\cms\media;
+namespace ride\web\cms\asset;
 
-use ride\application\orm\entry\MediaEntry as OrmMediaEntry;
+use ride\application\orm\entry\AssetEntry as OrmAssetEntry;
 
 /**
- * Data container for a media object
+ * Data container for a asset object
  */
-class MediaEntry extends OrmMediaEntry {
+class AssetEntry extends OrmAssetEntry {
 
     /**
-     * Gets the image of this media item
+     * Gets the image of this asset item
      * @return string
      */
     public function getImage() {

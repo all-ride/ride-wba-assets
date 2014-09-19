@@ -1,6 +1,6 @@
 <?php
 
-namespace ride\web\cms\media;
+namespace ride\web\cms\asset;
 
 use ride\library\orm\model\GenericModel;
 use ride\library\orm\query\ModelQuery;
@@ -8,11 +8,12 @@ use ride\library\validation\exception\ValidationException;
 use ride\library\validation\ValidationError;
 
 use \Exception;
+use ride\web\cms\asset\AssetFolderEntry;
 
 /**
- * Model for the albums of media items
+ * Model for the folders of asset items
  */
-class MediaAlbumModel extends GenericModel {
+class AssetFolderModel extends GenericModel {
 
     /**
      * Separator for the node path
@@ -23,19 +24,19 @@ class MediaAlbumModel extends GenericModel {
     public function getDataList(array $options = null) {
         $locale = isset($options['locale']) ? $options['locale'] : null;
 
-        $tree = $this->getAlbumTree(null, null, null, $locale);
+        $tree = $this->getFolderTree(null, null, null, $locale);
 
-        return $this->createListFromAlbumTree($tree);
+        return $this->createListFromFolderTree($tree);
     }
 
     /**
-     * Get a album by it's id
+     * Get a folder by it's id
      * @param int $id id of the node
      * @param integer $recursiveDepth set to false to skip the loading of the node settings
      * @param string $locale code of the locale
-     * @return Album
+     * @return Folder
      */
-    public function getAlbum($id, $recursiveDepth = 1, $locale = null, $fetchUnlocalized = null) {
+    public function getFolder($id, $recursiveDepth = 1, $locale = null, $fetchUnlocalized = null) {
         $query = $this->createQuery($locale);
         $query->setRecursiveDepth(0);
         if ($fetchUnlocalized) {
@@ -47,44 +48,44 @@ class MediaAlbumModel extends GenericModel {
         } elseif (is_string($id)) {
             $query->addCondition('{slug} = %1%', $id);
         } else {
-            throw new Exception('Could not get album: invalid id provided (' . gettype($id) . ')');
+            throw new Exception('Could not get folder: invalid id provided (' . gettype($id) . ')');
         }
 
-        $album = $query->queryFirst();
+        $folder = $query->queryFirst();
 
-        if (!$album) {
-            throw new Exception('Could not find album with id ' . $id);
+        if (!$folder) {
+            throw new Exception('Could not find folder with id ' . $id);
         }
 
         if ($recursiveDepth != 0) {
-            $album->children = $this->getAlbumTree($album, null, $recursiveDepth, $locale, $fetchUnlocalized);
+            $folder->children = $this->getFolderTree($folder, null, $recursiveDepth, $locale, $fetchUnlocalized);
         }
 
-        return $album;
+        return $folder;
     }
 
     /**
      * Get the root node of a node
-     * @param int|Album $album id of the node or an instance of a Album
+     * @param int|Folder $folder id of the node or an instance of a Folder
      * @param integer $recursiveDepth
      * @param string $locale code of the locale
-     * @return Album
+     * @return Folder
      */
-    public function getRootAlbum($album, $recursiveDepth = 1, $locale = null) {
-        if (is_numeric($album)) {
+    public function getRootFolder($folder, $recursiveDepth = 1, $locale = null) {
+        if (is_numeric($folder)) {
             $query = $this->createQuery($locale);
             $query->setFields('{id}, {parent}');
-            $query->addCondition('{id} = %1%', $album);
-            $album = $query->queryFirst();
+            $query->addCondition('{id} = %1%', $folder);
+            $folder = $query->queryFirst();
 
-            if (!$album) {
-                throw new Exception('Could not find album id ' . $id);
+            if (!$folder) {
+                throw new Exception('Could not find folder id ' . $folder);
             }
         }
 
-        $rootAlbumId = $album->getRootAlbumId();
+        $rootFolderId = $folder->getRootFolderId();
 
-        return $this->getAlbum($rootAlbumId, $recursiveDepth, $locale);
+        return $this->getFolder($rootFolderId, $recursiveDepth, $locale);
     }
 
     /**
@@ -93,16 +94,16 @@ class MediaAlbumModel extends GenericModel {
      * @param string $prefix prefix for the node names
      * @return array Array with the node id as key and the node name as value
      */
-    public function createListFromAlbumTree(array $tree, $separator = '/', $prefix = '') {
+    public function createListFromFolderTree(array $tree, $separator = '/', $prefix = '') {
         $list = array();
 
-        foreach ($tree as $album) {
-            $newPrefix = $prefix . $separator . $album->name;
+        foreach ($tree as $folder) {
+            $newPrefix = $prefix . $separator . $folder->name;
 
-            $list[$album->id] = $newPrefix;
+            $list[$folder->id] = $newPrefix;
 
-            if ($album->children) {
-                $children = $this->createListFromAlbumTree($album->children, $separator, $newPrefix);
+            if ($folder->children) {
+                $children = $this->createListFromFolderTree($folder->children, $separator, $newPrefix);
 
                 $list = $list + $children;
             }
@@ -121,7 +122,7 @@ class MediaAlbumModel extends GenericModel {
      * @param boolean $isFrontend Set to true to get only the nodes available in the frontend*
      * @return array Array with the node id as key and the node as value
      */
-    public function getAlbumTree($parent = null, $excludes = null, $maxDepth = null, $locale = null, $includeUnlocalized = null) {
+    public function getFolderTree($parent = null, $excludes = null, $maxDepth = null, $locale = null, $includeUnlocalized = null) {
         if ($excludes) {
             if (!is_array($excludes)) {
                 $excludes = array($excludes);
@@ -141,18 +142,19 @@ class MediaAlbumModel extends GenericModel {
 
     /**
      * Get the nodes with their nested children for a parent node
-     * @param MediaAlbumEntry $parent
+     * @param AssetFolderEntry $parent
      * @param string|array $excludes
      * @param integer $maxDepth
      * @param string $locale
      * @param boolean $includeUnlocalized
-     * @return array Array with the node id as key and the Album object with nested children as value
+     * @return array Array with the node id as key and the Folder object with nested children as value
      */
-    public function getAlbums(MediaAlbumEntry $parent = null, $excludes = null, $maxDepth = null, $locale = null, $includeUnlocalized = null) {
+    public function getFolder(AssetFolderEntry $parent = null, $excludes = null, $maxDepth = null, $locale = null, $includeUnlocalized = null) {
         $query = $this->createQuery($locale);
         $query->setRecursiveDepth(0);
         $query->setFetchUnlocalized($includeUnlocalized);
 
+        $path = "";
         if ($parent) {
             $path = $parent->getPath();
             $query->addCondition('{parent} = %1% OR {parent} LIKE %2%', $path, $path . self::PATH_SEPARATOR . '%');
@@ -175,46 +177,46 @@ class MediaAlbumModel extends GenericModel {
         }
 
         $query->addOrderBy('{parent} ASC, {orderIndex} ASC');
-        $albums = $query->query();
+        $folders = $query->query();
 
         // create an array by path
-        $albumsByParent = array();
-        foreach ($albums as $album) {
-            if (!array_key_exists($album->parent, $albumsByParent)) {
-                $albumsByParent[$album->parent] = array();
+        $foldersByParent = array();
+        foreach ($folders as $folder) {
+            if (!array_key_exists($folder->parent, $foldersByParent)) {
+                $foldersByParent[$folder->parent] = array();
             }
 
-            $albumParent = $album->parent;
-            if (!$album->parent) {
-                $albumParent = 0;
+            $folderParent = $folder->parent;
+            if (!$folder->parent) {
+                $folderParent = 0;
             }
 
-            $albumsByParent[$albumParent][$album->id] = $album;
+            $foldersByParent[$folderParent][$folder->id] = $folder;
         }
 
         // link the nested nodes
-        $albums = array();
-        foreach ($albumsByParent as $albumPath => $pathAlbums) {
-            if ($parent && $albumPath == $path) {
-                $albums = $pathAlbums;
+        $folders = array();
+        foreach ($foldersByParent as $folderPath => $pathFolders) {
+            if ($parent && $folderPath == $path) {
+                $folders = $pathFolders;
             }
 
-            foreach ($pathAlbums as $pathAlbum) {
-                $pathAlbumPath = $pathAlbum->getPath();
-                if (!array_key_exists($pathAlbumPath, $albumsByParent)) {
+            foreach ($pathFolders as $pathFolder) {
+                $pathFolderPath = $pathFolder->getPath();
+                if (!array_key_exists($pathFolderPath, $foldersByParent)) {
                     continue;
                 }
 
-                $pathAlbum->children = $albumsByParent[$pathAlbumPath];
+                $pathFolder->children = $foldersByParent[$pathFolderPath];
 
-                unset($albumsByParent[$pathAlbumPath]);
+                unset($foldersByParent[$pathFolderPath]);
             }
         }
 
         if ($parent) {
-            return $albums;
-        } elseif ($albumsByParent) {
-            return $albumsByParent[0];
+            return $folders;
+        } elseif ($foldersByParent) {
+            return $foldersByParent[0];
         } else {
             return array();
         }
@@ -222,11 +224,11 @@ class MediaAlbumModel extends GenericModel {
 
     /**
      * Gets the number of children levels for the provided node
-     * @param Album $album
+     * @param Folder $folder
      * @return integer
      */
-    public function getChildrenLevelsForAlbum(MediaAlbumEntry $album) {
-        $path = $album->getPath();
+    public function getChildrenLevelsForAlbum(AssetFolderEntry $folder) {
+        $path = $folder->getPath();
 
         $query = $this->createQuery();
         $query->setRecursiveDepth(0);
@@ -235,16 +237,16 @@ class MediaAlbumModel extends GenericModel {
 
         $result = $query->queryFirst();
 
-        return $result->levels - $album->getLevel();
+        return $result->levels - $folder->getLevel();
     }
 
     /**
-     * Reorder the albums
+     * Reorder the folders
      * @param integer $parent Id of the parent node
-     * @param array $albumOrder Array with the node id as key and the number of children as value
+     * @param array $folderOrder Array with the node id as key and the number of children as value
      * @return null
      */
-    public function orderAlbums($parent, array $albumOrder) {
+    public function orderFolders($parent, array $folderOrder) {
         $query = $this->createQuery();
         $query->setRecursiveDepth(0);
         $query->setFields('{id}, {parent}');
@@ -252,7 +254,7 @@ class MediaAlbumModel extends GenericModel {
 
         $parent = $query->queryFirst();
         if (!$parent) {
-            throw new Exception('Could not find album id ' . $id);
+            throw new Exception('Could not find folder id ' . $parent->id);
         }
 
         $path = $parent->getPath();
@@ -267,19 +269,19 @@ class MediaAlbumModel extends GenericModel {
         $query->setRecursiveDepth(0);
         $query->setFields('{id}, {parent}, {orderIndex}');
         $query->addCondition('{parent} = %1% OR {parent} LIKE %2%', $path, $path . self::PATH_SEPARATOR . '%');
-        $albums = $query->query();
+        $folders = $query->query();
 
         $transactionStarted = $this->startTransaction();
         try {
-            foreach ($albumOrder as $albumId => $numChildren) {
-                if (!array_key_exists($albumId, $albums)) {
-                    throw new Exception('Album with id ' . $albumId . ' is not a child of node ' . $parent->id);
+            foreach ($folderOrder as $folderId => $numChildren) {
+                if (!array_key_exists($folderId, $folders)) {
+                    throw new Exception('Folder with id ' . $folderId . ' is not a child of node ' . $parent->id);
                 }
 
-                $albums[$albumId]->parent = $path;
-                $albums[$albumId]->orderIndex = $orderIndex;
+                $folders[$folderId]->parent = $path;
+                $folders[]->orderIndex = $orderIndex;
 
-                $this->save($albums[$albumId]);
+                $this->save($folders[$folderId]);
 
                 $orderIndex++;
 
@@ -299,15 +301,15 @@ class MediaAlbumModel extends GenericModel {
                     array_push($children, $child);
 
                     $orderIndex = 1;
-                    $path = $albums[$albumId]->getPath();
+                    $path = $folders[$folderId]->getPath();
                     $child = $numChildren;
                 }
 
-                unset($albums[$albumId]);
+                unset($folders[$folderId]);
             }
 
-            if ($albums) {
-                throw new Exception('Not all albums of the provided parent are provided in the order array: missing albums ' . implode(', ', array_keys($albums)));
+            if ($folders) {
+                throw new Exception('Not all folders of the provided parent are provided in the order array: missing folders ' . implode(', ', array_keys($folders)));
             }
 
             $this->commitTransaction($transactionStarted);
@@ -320,17 +322,17 @@ class MediaAlbumModel extends GenericModel {
 
     /**
      * Save a node to the model
-     * @param Album $album
+     * @param Folder $folder
      * @return null
      */
-    protected function saveEntry($album) {
-        if (!$album->id) {
-            if (!$album->orderIndex) {
-                $album->orderIndex = $this->getNewOrderIndex($album->parent);
+    protected function saveEntry($folder) {
+        if (!$folder->id) {
+            if (!$folder->orderIndex) {
+                $folder->orderIndex = $this->getNewOrderIndex($folder->parent);
             }
         }
 
-        parent::saveEntry($album);
+        parent::saveEntry($folder);
     }
 
     /**
@@ -356,8 +358,8 @@ class MediaAlbumModel extends GenericModel {
 
     /**
      * Deletes the data from the database
-     * @param Album $data
-     * @return Album
+     * @param Folder $data
+     * @return folder
      */
     protected function deleteData($data) {
         $data = parent::deleteData($data);

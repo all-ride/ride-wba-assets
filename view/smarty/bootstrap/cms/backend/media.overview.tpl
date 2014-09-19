@@ -1,15 +1,15 @@
 {extends file="base/index"}
 
-{block name="head_title" prepend}{translate key="title.media"} - {/block}
+{block name="head_title" prepend}{translate key="title.asset"} - {/block}
 
 {block name="taskbar_panels" append}
-    {url id="media.album.overview" parameters=["locale" => "%locale%", "album" => $album->id] var="url"}
+    {url id="asset.album.overview" parameters=["locale" => "%locale%", "album" => $album->id] var="url"}
     {call taskbarPanelLocales url=$url locale=$locale locales=$locales}
 {/block}
 
 {block name="content_title" append}
     <div class="page-header">
-        <h1>{translate key="title.media"}</h1>
+        <h1>{translate key="title.asset"}</h1>
     </div>
 {/block}
 
@@ -20,8 +20,8 @@
     </form>
 
     <div class="btn-group media-actions">
-        <a href="{url id="media.album.add" parameters=["locale" => $locale]}?album={$album->id}" class="btn btn-default btn-small">{translate key="button.add.album"}</a>
-        <a href="{url id="media.item.add" parameters=["locale" => $locale]}?album={$album->id}" class="btn btn-default btn-small">{translate key="button.add.media"}</a>
+        <a href="{url id="asset.album.add" parameters=["locale" => $locale]}?album={$album->id}" class="btn btn-default btn-small">{translate key="button.add.album"}</a>
+        <a href="{url id="asset.item.add" parameters=["locale" => $locale]}?album={$album->id}" class="btn btn-default btn-small">{translate key="button.add.asset"}</a>
     </div>
 
     {if $album->description}
@@ -34,14 +34,14 @@
     {foreach $album->children as $child}
         <div class="row-fluid media-item" id="album-{$child->id}">
             <div class="media-handle media-album"></div>
-            <a href="{url id="media.album.overview" parameters=["locale" => $locale, "album" => $child->id]}">{$child->name}</a>
+            <a href="{url id="asset.album.overview" parameters=["locale" => $locale, "album" => $child->id]}">{$child->name}</a>
             {$child->description}
             <div class="info text-muted">
                 {translate key="label.album.info" albums=count($child->children) items=count($child->media)}
             </div>
             <div class="btn-group">
-                <a href="{url id="media.album.edit" parameters=["locale" => $locale, "album" => $child->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
-                <a href="{url id="media.album.delete" parameters=["locale" => $locale, "album" => $child->id]}" class="btn btn-default btn-sm btn-confirm" data-message="Are you sure you want to delete {$child->name|escape}?">{translate key="button.delete"}</a>
+                <a href="{url id="asset.album.edit" parameters=["locale" => $locale, "album" => $child->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
+                <a href="{url id="asset.album.delete" parameters=["locale" => $locale, "album" => $child->id]}" class="btn btn-default btn-sm btn-confirm" data-message="Are you sure you want to delete {$child->name|escape}?">{translate key="button.delete"}</a>
             </div>
             <hr />
         </div>
@@ -68,12 +68,12 @@
                 </div>
                 {/if}
                 <div>
-                    <a href="{url id="media.item.edit" parameters=["locale" => $locale, "item" => $media->id]}">{$media->name}</a>
+                    <a href="{url id="asset.item.edit" parameters=["locale" => $locale, "item" => $media->id]}">{$media->name}</a>
                     {$media->description}
                 </div>
                 <div class="btn-group">
-                    <a href="{url id="media.item.edit" parameters=["locale" => $locale, "item" => $media->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
-                    <a href="{url id="media.item.delete" parameters=["locale" => $locale, "item" => $media->id]}" class="btn btn-default btn-sm btn-confirm" data-message="Are you sure you want to delete {$media->name|escape}?">{translate key="button.delete"}</a>
+                    <a href="{url id="asset.item.edit" parameters=["locale" => $locale, "item" => $media->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
+                    <a href="{url id="asset.item.delete" parameters=["locale" => $locale, "item" => $media->id]}" class="btn btn-default btn-sm btn-confirm" data-message="Are you sure you want to delete {$media->name|escape}?">{translate key="button.delete"}</a>
                 </div>
             </div>
             <hr />
@@ -102,13 +102,13 @@
                 return confirm($(this).data('message'));
             });
 
-            var sortUrl = "{url id="media.album.sort" parameters=["locale" => $locale, "album" => $album->id]}";
+            var sortUrl = "{url id="asset.album.sort" parameters=["locale" => $locale, "album" => $album->id]}";
 
             $(".media-items").sortable({
                 axis: "y",
                 cursor: "move",
-                handle: ".media-handle",
-                items: "> .media-item",
+                handle: ".asset-handle",
+                items: "> .asset-item",
                 select: false,
                 scroll: true,
                 update: function(event, ui) {

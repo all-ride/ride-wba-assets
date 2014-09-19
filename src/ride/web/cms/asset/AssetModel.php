@@ -1,15 +1,15 @@
 <?php
 
-namespace ride\web\cms\media;
+namespace ride\web\cms\asset;
 
 use ride\library\orm\model\GenericModel;
 
 /**
- * Model for the media items
+ * Model for the asset items
  */
-class MediaModel extends GenericModel {
+class AssetModel extends GenericModel {
 
-    public function getMediaForAlbum($album, $locale = null) {
+    public function getAssetsForAlbum($album, $locale = null) {
         $query = $this->createQuery($locale);
         if (is_array($album)) {
             $query->addCondition('{album} IN %1%', $album);

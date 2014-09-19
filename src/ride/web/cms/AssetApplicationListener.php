@@ -6,15 +6,14 @@ use ride\library\event\Event;
 
 use ride\web\base\menu\MenuItem;
 
-class MediaApplicationListener {
+class AssetApplicationListener {
 
     public function prepareContentMenu(Event $event) {
         $menuItem = new MenuItem();
-        $menuItem->setTranslation('title.media');
-        $menuItem->setRoute('media.overview');
+        $menuItem->setTranslation('title.asset');
+        $menuItem->setRoute('asset.overview');
 
         $menu = $event->getArgument('menu');
         $menu->addMenuItem($menuItem);
     }
-
 }

@@ -1,8 +1,8 @@
 {
-    "name": "ride/wba-assets",
+    "name": "ride/wba-asset",
     "description": "Ride asset library",
     "license": "MIT",
-    "version": "pla",
+    "version": "0.1.0",
     "authors": [
         {
             "name": "Ward brems",

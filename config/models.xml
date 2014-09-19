@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <models>
-    <model name="MediaMeta">
-        <field name="media" model="Media" relation="belongsTo">
+    <model name="AssetMeta">
+        <field name="asset" model="Asset" relation="belongsTo">
             <validation name="required" />
         </field>
         <field name="name" type="string">
@@ -10,12 +10,12 @@
         <field name="value" type="text" localized="true" />
 
         <format name="title">{name}</format>
-        <format name="teaser">{media.name}</format>
+        <format name="teaser">{asset.name}</format>
 
         <option name="behaviour.log" value="true" />
     </model>
-    <model name="Media" modelClass="ride\web\cms\media\MediaModel" entryClass="ride\web\cms\media\MediaEntry">
-        <field name="album" model="MediaAlbum" relation="belongsTo">
+    <model name="Asset" modelClass="ride\web\cms\asset\AssetModel" entryClass="ride\web\cms\asset\AssetEntry">
+        <field name="folder" model="AssetFolder" relation="belongsTo">
             <validation name="required" />
         </field>
         <field name="orderIndex" type="integer" />
@@ -30,7 +30,7 @@
         <field name="thumbnail" type="image" />
         <field name="type" type="string" />
         <field name="value" type="string" />
-        <field name="meta" model="MediaMeta" relation="hasMany" />
+        <field name="meta" model="AssetMeta" relation="hasMany" />
         <field name="slug" type="string" localized="true" />
 
         <format name="title">{name}</format>
@@ -41,7 +41,7 @@
         <option name="behaviour.slug" value="name" />
         <option name="behaviour.version" value="true" />
     </model>
-    <model name="MediaAlbum" modelClass="ride\web\cms\media\MediaAlbumModel" entryClass="ride\web\cms\media\MediaAlbumEntry">
+    <model name="AssetFolder" modelClass="ride\web\cms\asset\AssetFolderModel" entryClass="ride\web\cms\asset\AssetFolderEntry">
         <field name="parent" type="string">
             <option name="label.name" value="label.parent" />
         </field>
@@ -53,7 +53,7 @@
         <field name="description" type="wysiwyg" localized="true">
             <option name="label.name" value="label.description" />
         </field>
-        <field name="media" model="Media" relation="hasMany" />
+        <field name="asset" model="Asset" relation="hasMany" />
         <field name="slug" type="string" localized="true" />
 
         <format name="title">{name}</format>

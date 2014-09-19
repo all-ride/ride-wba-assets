@@ -1,7 +1,7 @@
 {
     "cms.menu.content": [
         {
-            "interface": "ride\\web\\cms\\MediaApplicationListener",
+            "interface": "ride\\web\\cms\\AssetApplicationListener",
             "method": "prepareContentMenu"
         }
     ]

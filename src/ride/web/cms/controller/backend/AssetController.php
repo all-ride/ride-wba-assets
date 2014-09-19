@@ -10,11 +10,11 @@ use ride\library\validation\exception\ValidationException;
 
 use ride\web\base\controller\AbstractController;
 
-class MediaController extends AbstractController {
+class AssetsController extends AbstractController {
 
     public function indexAction(I18n $i18n, OrmManager $orm, $locale = null, $album = null) {
         if (!$locale) {
-            $url = $this->getUrl('media.overview.locale', array('locale' => $this->getLocale()));
+            $url = $this->getUrl('asset.overview.locale', array('locale' => $this->getLocale()));
 
             $this->response->setRedirect($url);
 
@@ -50,7 +50,7 @@ class MediaController extends AbstractController {
         if ($form->isSubmitted()) {
             $data = $form->getData();
 
-            $url = $this->getUrl('media.album.overview', array('locale' => $locale, 'album' => $data['album']));
+            $url = $this->getUrl('asset.album.overview', array('locale' => $locale, 'album' => $data['album']));
 
             $this->response->setRedirect($url);
 
@@ -77,7 +77,7 @@ class MediaController extends AbstractController {
             $child->media = $mediaModel->getMediaForAlbum($child->id, $locale);
         }
 
-        $this->setTemplateView('cms/backend/media.overview', array(
+        $this->setTemplateView('cms/backend/asset.overview', array(
             'form' => $form->getView(),
             'album' => $album,
             'locales' => $i18n->getLocaleCodeList(),
@@ -178,7 +178,7 @@ class MediaController extends AbstractController {
                     $album = '';
                 }
 
-                $url = $this->getUrl('media.overview.album', array('locale' => $locale, 'album' => $album));
+                $url = $this->getUrl('asset.overview.album', array('locale' => $locale, 'album' => $album));
 
                 $this->response->setRedirect($url);
 
@@ -200,7 +200,7 @@ class MediaController extends AbstractController {
 
                 $mediaAlbumModel->save($album);
 
-                $url = $this->getUrl('media.album.overview', array('locale' => $locale, 'album' => $album->id));
+                $url = $this->getUrl('asset.album.overview', array('locale' => $locale, 'album' => $album->id));
 
                 $this->response->setRedirect($url);
 
@@ -210,7 +210,7 @@ class MediaController extends AbstractController {
             }
         }
 
-        $this->setTemplateView('cms/backend/media.album', array(
+        $this->setTemplateView('cms/backend/asset.album', array(
             'form' => $form->getView(),
             'album' => $album,
             'referer' => $this->request->getQueryParameter('referer'),
@@ -235,14 +235,14 @@ class MediaController extends AbstractController {
                 $album = '';
             }
 
-            $url = $this->getUrl('media.album.overview', array('locale' => $locale, 'album' => $album));
+            $url = $this->getUrl('asset.album.overview', array('locale' => $locale, 'album' => $album));
 
             $this->response->setRedirect($url);
 
             return;
         }
 
-        $this->setTemplateView('cms/backend/media.delete', array(
+        $this->setTemplateView('cms/backend/asset.delete', array(
             'name' => $album->name,
             'referer' => $this->request->getQueryParameter('referer'),
         ));
@@ -258,10 +258,6 @@ class MediaController extends AbstractController {
                 $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
                 return;
-            }
-
-            if ($media->album) {
-                $media->album = $media->album->id;
             }
         } else {
             $media = $mediaModel->createEntry();
@@ -299,21 +295,21 @@ class MediaController extends AbstractController {
         ));
         $form->addRow('file', 'file', array(
             'label' => $translator->translate('label.file'),
-            'path' => $fileBrowser->getApplicationDirectory()->getChild('data/upload/media'),
+            'path' => $fileBrowser->getApplicationDirectory()->getChild('data/upload/asset'),
             'validators' => array(
                 'required' => array(),
             )
         ));
         $form->addRow('thumbnail', 'image', array(
             'label' => $translator->translate('label.thumbnail'),
-            'path' => $fileBrowser->getPublicDirectory()->getChild('media'),
+            'path' => $fileBrowser->getPublicDirectory()->getChild('asset'),
         ));
         $form->setRequest($this->request);
 
         $form = $form->build();
         if ($form->isSubmitted()) {
             if ($this->request->getBodyParameter('cancel')) {
-                $url = $this->getUrl('media.overview.album', array('locale' => $locale, 'album' => $media->album->id));
+                $url = $this->getUrl('asset.overview.album', array('locale' => $locale, 'album' => $media->album->id));
 
                 $this->response->setRedirect($url);
 
@@ -360,7 +356,7 @@ class MediaController extends AbstractController {
 
                 $mediaModel->save($media);
 
-                $url = $this->getUrl('media.album.overview', array('locale' => $locale, 'album' => $media->album->id));
+                $url = $this->getUrl('asset.album.overview', array('locale' => $locale, 'album' => $media->album->id));
 
                 $this->response->setRedirect($url);
 
@@ -370,9 +366,9 @@ class MediaController extends AbstractController {
             }
         }
 
-        $this->setTemplateView('cms/backend/media.item', array(
+        $this->setTemplateView('cms/backend/asset.item', array(
             'form' => $form->getView(),
-            'media' => $media,
+            'asset' => $media,
             'locale' => $locale,
             'referer' => $this->request->getQueryParameter('referer'),
         ));
@@ -391,14 +387,14 @@ class MediaController extends AbstractController {
         if ($this->request->isPost()) {
             $mediaModel->delete($item);
 
-            $url = $this->getUrl('media.album.overview', array('locale' => $locale, 'album' => $item->album->id));
+            $url = $this->getUrl('asset.album.overview', array('locale' => $locale, 'album' => $item->album->id));
 
             $this->response->setRedirect($url);
 
             return;
         }
 
-        $this->setTemplateView('cms/backend/media.delete', array(
+        $this->setTemplateView('cms/backend/asset.delete', array(
             'name' => $item->name,
             'referer' => $this->request->getQueryParameter('referer'),
         ));
