@@ -1,0 +1,8 @@
+{
+    "cms.menu.content": [
+        {
+            "interface": "ride\\web\\cms\\MediaApplicationListener",
+            "method": "prepareContentMenu"
+        }
+    ]
+}

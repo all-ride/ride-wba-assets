@@ -1,0 +1,67 @@
+{
+    "routes": [
+        {
+            "path": "/content/media",
+            "controller": "ride\\web\\cms\\controller\\backend\\MediaController",
+            "action": "indexAction",
+            "id": "media.overview"
+        },
+        {
+            "path": "/content/media/%locale%/album",
+            "controller": "ride\\web\\cms\\controller\\backend\\MediaController",
+            "action": "indexAction",
+            "id": "media.overview.locale"
+        },
+        {
+            "path": "/content/media/%locale%/album/%album%",
+            "controller": "ride\\web\\cms\\controller\\backend\\MediaController",
+            "action": "indexAction",
+            "id": "media.album.overview"
+        },
+        {
+            "path": "/content/media/%locale%/album/%album%/sort",
+            "controller": "ride\\web\\cms\\controller\\backend\\MediaController",
+            "action": "sortAction",
+            "id": "media.album.sort",
+            "methods": "post"
+        },
+        {
+            "path": "/content/media/%locale%/album/%album%/edit",
+            "controller": "ride\\web\\cms\\controller\\backend\\MediaController",
+            "action": "albumAction",
+            "id": "media.album.edit",
+            "methods": ["head", "get", "post"]
+        },
+        {
+            "path": "/content/media/%locale%/album/%album%/delete",
+            "controller": "ride\\web\\cms\\controller\\backend\\MediaController",
+            "action": "albumDeleteAction",
+            "id": "media.album.delete"
+        },
+        {
+            "path": "/content/media/%locale%/add/album",
+            "controller": "ride\\web\\cms\\controller\\backend\\MediaController",
+            "action": "albumAction",
+            "id": "media.album.add"
+        },
+        {
+            "path": "/content/media/%locale%/item/%item%/edit",
+            "controller": "ride\\web\\cms\\controller\\backend\\MediaController",
+            "action": "itemAction",
+            "id": "media.item.edit",
+            "methods": ["head", "get", "post"]
+        },
+        {
+            "path": "/content/media/%locale%/item/%item%/delete",
+            "controller": "ride\\web\\cms\\controller\\backend\\MediaController",
+            "action": "itemDeleteAction",
+            "id": "media.item.delete"
+        },
+        {
+            "path": "/content/media/%locale%/add/item",
+            "controller": "ride\\web\\cms\\controller\\backend\\MediaController",
+            "action": "itemAction",
+            "id": "media.item.add"
+        }
+    ]
+}

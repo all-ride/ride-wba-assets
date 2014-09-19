@@ -1,0 +1,15 @@
+{
+    "button.add.album": "Add a new album",
+    "button.add.media": "Add a new media item",
+
+    "label.album.current": "Current album",
+    "label.album.info": "%albums% subalbums, %items% items",
+    "label.album": "Album",
+    "label.description": "Description",
+    "label.file": "File",
+    "label.media": "Media",
+    "label.parent": "Parent",
+    "label.thumbnail": "Thumbnail",
+    "title.albums": "Albums",
+    "title.media": "Media"
+}
