@@ -11,7 +11,7 @@ class AssetApplicationListener {
     public function prepareContentMenu(Event $event) {
         $menuItem = new MenuItem();
         $menuItem->setTranslation('title.assets');
-        $menuItem->setRoute('asset.overview');
+        $menuItem->setRoute('assets.overview');
 
         $menu = $event->getArgument('menu');
         $menu->addMenuItem($menuItem);

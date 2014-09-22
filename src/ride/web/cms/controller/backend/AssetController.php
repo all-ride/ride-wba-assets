@@ -14,7 +14,7 @@ class AssetController extends AbstractController {
 
     public function indexAction(I18n $i18n, OrmManager $orm, $locale = null, $folder = null) {
         if (!$locale) {
-            $url = $this->getUrl('asset.overview.locale', array('locale' => $this->getLocale()));
+            $url = $this->getUrl('assets.overview.locale', array('locale' => $this->getLocale()));
 
             $this->response->setRedirect($url);
 
@@ -49,7 +49,7 @@ class AssetController extends AbstractController {
         if ($form->isSubmitted()) {
             $data = $form->getData();
 
-            $url = $this->getUrl('asset.folder.overview', array('locale' => $locale, 'folder' => $data['folder']));
+            $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $data['folder']));
 
             $this->response->setRedirect($url);
 
@@ -76,7 +76,7 @@ class AssetController extends AbstractController {
             $child->assets = $assetModel->getAssetsForFolder($child->id, $locale);
         }
 
-        $this->setTemplateView('cms/backend/asset.overview', array(
+        $this->setTemplateView('cms/backend/assets.overview', array(
             'form' => $form->getView(),
             'folder' => $folder,
             'locales' => $i18n->getLocaleCodeList(),
@@ -177,7 +177,7 @@ class AssetController extends AbstractController {
                     $folder = '';
                 }
 
-                $url = $this->getUrl('asset.overview.folder', array('locale' => $locale, 'folder' => $folder));
+                $url = $this->getUrl('assets.overview.folder', array('locale' => $locale, 'folder' => $folder));
 
                 $this->response->setRedirect($url);
 
@@ -199,7 +199,7 @@ class AssetController extends AbstractController {
 
                 $assetFolderModel->save($folder);
 
-                $url = $this->getUrl('asset.folder.overview', array('locale' => $locale, 'folder' => $folder->id));
+                $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $folder->id));
 
                 $this->response->setRedirect($url);
 
@@ -209,7 +209,7 @@ class AssetController extends AbstractController {
             }
         }
 
-        $this->setTemplateView('cms/backend/asset.folder', array(
+        $this->setTemplateView('cms/backend/assets.folder', array(
             'form' => $form->getView(),
             'folder' => $folder,
             'referer' => $this->request->getQueryParameter('referer'),
@@ -234,7 +234,7 @@ class AssetController extends AbstractController {
                 $folder = '';
             }
 
-            $url = $this->getUrl('asset.folder.overview', array('locale' => $locale, 'folder' => $folder));
+            $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $folder));
 
             $this->response->setRedirect($url);
 
@@ -247,7 +247,7 @@ class AssetController extends AbstractController {
         ));
     }
 
-    public function itemAction(OrmManager $orm, FileBrowser $fileBrowser, $locale, $item = null) {
+    public function assetAction(OrmManager $orm, FileBrowser $fileBrowser, $locale, $item = null) {
         $assetFolderModel = $orm->getAssetFolderModel();
         $assetModel = $orm->getassetModel();
 
@@ -308,7 +308,7 @@ class AssetController extends AbstractController {
         $form = $form->build();
         if ($form->isSubmitted()) {
             if ($this->request->getBodyParameter('cancel')) {
-                $url = $this->getUrl('asset.overview.folder', array('locale' => $locale, 'folder' => $asset->folder->id));
+                $url = $this->getUrl('assets.overview.folder', array('locale' => $locale, 'folder' => $asset->folder->id));
 
                 $this->response->setRedirect($url);
 
@@ -355,7 +355,7 @@ class AssetController extends AbstractController {
 
                 $assetModel->save($asset);
 
-                $url = $this->getUrl('asset.folder.overview', array('locale' => $locale, 'folder' => $asset->folder->id));
+                $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $asset->folder->id));
 
                 $this->response->setRedirect($url);
 
@@ -365,7 +365,7 @@ class AssetController extends AbstractController {
             }
         }
 
-        $this->setTemplateView('cms/backend/asset.item', array(
+        $this->setTemplateView('cms/backend/asset', array(
             'form' => $form->getView(),
             'asset' => $asset,
             'locale' => $locale,
@@ -373,7 +373,7 @@ class AssetController extends AbstractController {
         ));
     }
 
-    public function itemDeleteAction(OrmManager $orm, $locale, $item) {
+    public function assetDeleteAction(OrmManager $orm, $locale, $item) {
         $assetModel = $orm->getassetModel();
 
         $item = $assetModel->getById($item);
@@ -386,7 +386,7 @@ class AssetController extends AbstractController {
         if ($this->request->isPost()) {
             $assetModel->delete($item);
 
-            $url = $this->getUrl('asset.folder.overview', array('locale' => $locale, 'folder' => $item->folder->id));
+            $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $item->folder->id));
 
             $this->response->setRedirect($url);
 

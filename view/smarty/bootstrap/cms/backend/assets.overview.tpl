@@ -3,7 +3,7 @@
 {block name="head_title" prepend}{translate key="title.asset"} - {/block}
 
 {block name="taskbar_panels" append}
-    {url id="asset.album.overview" parameters=["locale" => "%locale%", "album" => $album->id] var="url"}
+    {url id="assets.folder.overview" parameters=["locale" => "%locale%", "folder" => $folder->id] var="url"}
     {call taskbarPanelLocales url=$url locale=$locale locales=$locales}
 {/block}
 
@@ -16,45 +16,45 @@
 {block name="content_body" append}
     {include file="base/form.prototype"}
     <form action="{$app.url.request}" method="POST" id="{$form->getId()}" class="form-horizontal">
-        {call formRow form=$form row="album"}
+        {call formRow form=$form row="folder"}
     </form>
 
     <div class="btn-group media-actions">
-        <a href="{url id="asset.album.add" parameters=["locale" => $locale]}?album={$album->id}" class="btn btn-default btn-small">{translate key="button.add.album"}</a>
-        <a href="{url id="asset.item.add" parameters=["locale" => $locale]}?album={$album->id}" class="btn btn-default btn-small">{translate key="button.add.asset"}</a>
+        <a href="{url id="assets.folder.add" parameters=["locale" => $locale]}?folder={$folder->id}" class="btn btn-default btn-small">{translate key="button.add.folder"}</a>
+        <a href="{url id="asset.add" parameters=["locale" => $locale]}?folder={$folder->id}" class="btn btn-default btn-small">{translate key="button.add.asset"}</a>
     </div>
 
-    {if $album->description}
-        <div class="description">{$album->description}</div>
+    {if $folder->description}
+        <div class="description">{$folder->description}</div>
     {/if}
 <div class="row-fluid">
     <div class="col-md-6 media-items">
-        <h3>{translate key="title.albums"}</h3>
-{if $album->children}
-    {foreach $album->children as $child}
-        <div class="row-fluid media-item" id="album-{$child->id}">
-            <div class="media-handle media-album"></div>
-            <a href="{url id="asset.album.overview" parameters=["locale" => $locale, "album" => $child->id]}">{$child->name}</a>
+        <h3>{translate key="title.folders"}</h3>
+{if $folder->children}
+    {foreach $folder->children as $child}
+        <div class="row-fluid media-item" id="folder-{$child->id}">
+            <div class="media-handle media-folder"></div>
+            <a href="{url id="assets.folder.overview" parameters=["locale" => $locale, "folder" => $child->id]}">{$child->name}</a>
             {$child->description}
             <div class="info text-muted">
-                {translate key="label.album.info" albums=count($child->children) items=count($child->media)}
+                {translate key="label.folder.info" folders=count($child->children) items=count($child->media)}
             </div>
             <div class="btn-group">
-                <a href="{url id="asset.album.edit" parameters=["locale" => $locale, "album" => $child->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
-                <a href="{url id="asset.album.delete" parameters=["locale" => $locale, "album" => $child->id]}" class="btn btn-default btn-sm btn-confirm" data-message="Are you sure you want to delete {$child->name|escape}?">{translate key="button.delete"}</a>
+                <a href="{url id="assets.folder.edit" parameters=["locale" => $locale, "folder" => $child->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
+                <a href="{url id="assets.folder.delete" parameters=["locale" => $locale, "folder" => $child->id]}" class="btn btn-default btn-sm btn-confirm" data-message="Are you sure you want to delete {$child->name|escape}?">{translate key="button.delete"}</a>
             </div>
             <hr />
         </div>
     {/foreach}
 {else}
-    <p>There are no subalbums in the current album.</p>
+    <p>{translate key="label.folder.no.subfolders"}</p>
 {/if}
     </div>
 
     <div class="col-md-6 media-items">
-        <h3>Media</h3>
-{if $album->media}
-    {foreach $album->media as $media}
+        <h3>{translate key="label.assets"}</h3>
+{if $folder->media}
+    {foreach $folder->media as $media}
         <div class="row-fluid media-item clearfix" id="item-{$media->id}">
             <div class="clearfix">
                 <div class="media-handle media-{$media->type}"></div>
@@ -68,19 +68,19 @@
                 </div>
                 {/if}
                 <div>
-                    <a href="{url id="asset.item.edit" parameters=["locale" => $locale, "item" => $media->id]}">{$media->name}</a>
+                    <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $media->id]}">{$media->name}</a>
                     {$media->description}
                 </div>
                 <div class="btn-group">
-                    <a href="{url id="asset.item.edit" parameters=["locale" => $locale, "item" => $media->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
-                    <a href="{url id="asset.item.delete" parameters=["locale" => $locale, "item" => $media->id]}" class="btn btn-default btn-sm btn-confirm" data-message="Are you sure you want to delete {$media->name|escape}?">{translate key="button.delete"}</a>
+                    <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $media->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
+                    <a href="{url id="asset.delete" parameters=["locale" => $locale, "item" => $media->id]}" class="btn btn-default btn-sm btn-confirm" data-message="Are you sure you want to delete {$media->name|escape}?">{translate key="button.delete"}</a>
                 </div>
             </div>
             <hr />
         </div>
     {/foreach}
 {else}
-    <p>There is no media in the current album.</p>
+    <p>{translate key="label.folder.no.assets"}</p>
 {/if}
     </div>
 </div>
@@ -94,7 +94,7 @@
     <script src="{$app.url.base}/js/jquery-ui.js"></script>
     <script type="text/javascript">
         $(function() {
-            $("#form-album").change(function() {
+            $("#form-folder").change(function() {
                 $(this).parentsUntil("form").parent().submit();
             });
 
@@ -102,7 +102,7 @@
                 return confirm($(this).data('message'));
             });
 
-            var sortUrl = "{url id="asset.album.sort" parameters=["locale" => $locale, "album" => $album->id]}";
+            var sortUrl = "{url id="assets.folder.sort" parameters=["locale" => $locale, "folder" => $folder->id]}";
 
             $(".media-items").sortable({
                 axis: "y",

@@ -9,12 +9,12 @@ use ride\library\orm\model\GenericModel;
  */
 class AssetModel extends GenericModel {
 
-    public function getAssetsForFolder($asset, $locale = null) {
+    public function getAssetsForFolder($folder, $locale = null) {
         $query = $this->createQuery($locale);
-        if (is_array($asset)) {
-            $query->addCondition('{asset} IN %1%', $asset);
+        if (is_array($folder)) {
+            $query->addCondition('{folder} IN %1%', $folder);
         } else {
-            $query->addCondition('{asset} = %1%', $asset);
+            $query->addCondition('{folder} = %1%', $folder);
         }
         $query->addOrderBy('{orderIndex} ASC');
 
