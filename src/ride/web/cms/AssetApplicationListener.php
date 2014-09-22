@@ -10,7 +10,7 @@ class AssetApplicationListener {
 
     public function prepareContentMenu(Event $event) {
         $menuItem = new MenuItem();
-        $menuItem->setTranslation('title.asset');
+        $menuItem->setTranslation('title.assets');
         $menuItem->setRoute('asset.overview');
 
         $menu = $event->getArgument('menu');

@@ -10,9 +10,9 @@ use ride\library\validation\exception\ValidationException;
 
 use ride\web\base\controller\AbstractController;
 
-class AssetsController extends AbstractController {
+class AssetController extends AbstractController {
 
-    public function indexAction(I18n $i18n, OrmManager $orm, $locale = null, $album = null) {
+    public function indexAction(I18n $i18n, OrmManager $orm, $locale = null, $folder = null) {
         if (!$locale) {
             $url = $this->getUrl('asset.overview.locale', array('locale' => $this->getLocale()));
 
@@ -31,18 +31,17 @@ class AssetsController extends AbstractController {
         }
 
         $translator = $this->getTranslator();
-
-        $mediaAlbumModel = $orm->getMediaAlbumModel();
-        $mediaModel = $orm->getMediaModel();
+        $assetFolderModel = $orm->getAssetFolderModel();
+        $assetModel = $orm->getAssetModel();
 
         $data = array(
-            'album' => $album,
+            'folder' => $folder,
         );
 
         $form = $this->createFormBuilder($data);
-        $form->addRow('album', 'select', array(
-            'label' => $translator->translate('label.album.current'),
-            'options' => array('' => '/') + $mediaAlbumModel->getDataList(),
+        $form->addRow('asset', 'select', array(
+            'label' => $translator->translate('label.asset.current'),
+            'options' => array('' => '/') + $assetFolderModel->getDataList(),
         ));
         $form->setRequest($this->request);
 
@@ -50,68 +49,68 @@ class AssetsController extends AbstractController {
         if ($form->isSubmitted()) {
             $data = $form->getData();
 
-            $url = $this->getUrl('asset.album.overview', array('locale' => $locale, 'album' => $data['album']));
+            $url = $this->getUrl('asset.folder.overview', array('locale' => $locale, 'folder' => $data['folder']));
 
             $this->response->setRedirect($url);
 
             return;
         }
 
-        if ($album) {
-            $album = $mediaAlbumModel->getAlbum($album, 2, $locale);
-            if (!$album) {
+        if ($folder) {
+            $folder = $assetFolderModel->getFolder($folder, 2, $locale);
+            if (!$folder) {
                 $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
                 return;
             }
 
-            $album->media = $mediaModel->getMediaForAlbum($album->id, $locale);
+            $folder->assets = $assetModel->getAssetsForFolder($folder->id, $locale);
         } else {
-            $album = $mediaAlbumModel->createEntry();
-            $album->id = 0;
-            $album->children = $mediaAlbumModel->getAlbums(null, null, 1, $locale);
-            $album->media = $mediaModel->getMediaForAlbum(null, $locale);
+            $folder = $assetFolderModel->createEntry();
+            $folder->id = 0;
+            $folder->children = $assetFolderModel->getFolders(null, null, 1, $locale);
+            $folder->assets = $assetModel->getAssetsForFolder(null, $locale);
         }
 
-        foreach ($album->children as $child) {
-            $child->media = $mediaModel->getMediaForAlbum($child->id, $locale);
+        foreach ($folder->children as $child) {
+            $child->assets = $assetModel->getAssetsForFolder($child->id, $locale);
         }
 
         $this->setTemplateView('cms/backend/asset.overview', array(
             'form' => $form->getView(),
-            'album' => $album,
+            'folder' => $folder,
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
         ));
     }
 
-    public function sortAction(OrmManager $orm, $locale, $album = null) {
-        $mediaAlbumModel = $orm->getMediaAlbumModel();
-        $mediaModel = $orm->getMediaModel();
+    public function sortAction(OrmManager $orm, $locale, $folder = null) {
+        $assetFolderModel = $orm->getAssetFolderModel();
+        $assetModel = $orm->getassetModel();
 
-        if ($album) {
-            $album = $mediaAlbumModel->getAlbum($album, 2, $locale);
-            if (!$album) {
+        if ($folder) {
+            $folder = $assetFolderModel->getFolder($folder, 2, $locale);
+            if (!$folder) {
                 $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
                 return;
             }
 
-            $album->media = $mediaModel->getMediaForAlbum($album->id, $locale);
+            $folder->assets = $assetModel->getAssetsForFolder($folder->id, $locale);
         } else {
-            $album = $mediaAlbumModel->createEntry();
-            $album->children = $mediaAlbumModel->getAlbums(null, null, 1, $locale);
-            $album->media = $mediaModel->getMediaForAlbum(null, $locale);
+            $folder = $assetFolderModel->createEntry();
+            $folder->children = $assetFolderModel->getFolders(null, null, 1, $locale);
+            $folder->assets = $assetModel->getAssetsForFolder(null, $locale);
         }
 
         $index = 1;
-        $albums = $this->request->getQueryParameter('album');
-        if ($albums) {
-            foreach ($albums as $albumId) {
-                if (isset($album->children[$albumId])) {
-                    $album->children[$albumId]->orderIndex = $index;
+        $folders = $this->request->getQueryParameter('folder');
+        if ($folders) {
+            foreach ($folders as $folderId) {
+                if (isset($folder->children[$folderId])) {
+                    $folder->children[$folderId]->orderIndex = $index;
 
-                    $mediaAlbumModel->save($album->children[$albumId]);
+                    $assetFolderModel->save($folder->children[$folderId]);
                 }
 
                 $index++;
@@ -122,10 +121,10 @@ class AssetsController extends AbstractController {
         $items = $this->request->getQueryParameter('item');
         if ($items) {
             foreach ($items as $itemId) {
-                if (isset($album->media[$itemId])) {
-                    $album->media[$itemId]->orderIndex = $index;
+                if (isset($folder->assets[$itemId])) {
+                    $folder->assets[$itemId]->orderIndex = $index;
 
-                    $mediaModel->save($album->media[$itemId]);
+                    $assetModel->save($folder->assets[$itemId]);
                 }
 
                 $index++;
@@ -133,32 +132,32 @@ class AssetsController extends AbstractController {
         }
     }
 
-    public function albumAction(OrmManager $orm, $locale, $album = null) {
-        $mediaAlbumModel = $orm->getMediaAlbumModel();
+    public function folderAction(OrmManager $orm, $locale, $folder = null) {
+        $assetFolderModel = $orm->getAssetFolderModel();
 
-        if ($album) {
-            $album = $mediaAlbumModel->getById($album);
-            if (!$album) {
+        if ($folder) {
+            $folder = $assetFolderModel->getById($folder);
+            if (!$folder) {
                 $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
                 return;
             }
         } else {
-            $album = $mediaAlbumModel->createEntry();
-            $album->parent = $this->request->getQueryParameter('album');
+            $folder = $assetFolderModel->createEntry();
+            $folder->parent = $this->request->getQueryParameter('folder');
         }
 
         $translator = $this->getTranslator();
 
         $data = array(
-            'name' => $album->name,
-            'parent' => $album->getParentAlbumId(),
+            'name' => $folder->name,
+            'parent' => $folder->getParentfolderId(),
         );
 
         $form = $this->createFormBuilder($data);
         $form->addRow('parent', 'select', array(
             'label' => $translator->translate('label.parent'),
-            'options' => array('' => '/') + $mediaAlbumModel->getDataList(array('locale' => $locale)),
+            'options' => array('' => '/') + $assetFolderModel->getDataList(array('locale' => $locale)),
         ));
         $form->addRow('name', 'string', array(
             'label' => $translator->translate('label.name'),
@@ -173,12 +172,12 @@ class AssetsController extends AbstractController {
         $form = $form->build();
         if ($form->isSubmitted()) {
             if ($this->request->getBodyParameter('cancel')) {
-                $album = $album->getParentAlbumId();
-                if (!$album) {
-                    $album = '';
+                $folder = $folder->getParentfolderId();
+                if (!$folder) {
+                    $folder = '';
                 }
 
-                $url = $this->getUrl('asset.overview.album', array('locale' => $locale, 'album' => $album));
+                $url = $this->getUrl('asset.overview.folder', array('locale' => $locale, 'folder' => $folder));
 
                 $this->response->setRedirect($url);
 
@@ -190,17 +189,17 @@ class AssetsController extends AbstractController {
 
                 $data = $form->getData();
 
-                $album->name = $data['name'];
-                $album->description = $data['description'];
-                $album->parent = $data['parent'];
+                $folder->name = $data['name'];
+                $folder->description = $data['description'];
+                $folder->parent = $data['parent'];
 
-                if (!$album->parent) {
-                    $album->parent = null;
+                if (!$folder->parent) {
+                    $folder->parent = null;
                 }
 
-                $mediaAlbumModel->save($album);
+                $assetFolderModel->save($folder);
 
-                $url = $this->getUrl('asset.album.overview', array('locale' => $locale, 'album' => $album->id));
+                $url = $this->getUrl('asset.folder.overview', array('locale' => $locale, 'folder' => $folder->id));
 
                 $this->response->setRedirect($url);
 
@@ -210,32 +209,32 @@ class AssetsController extends AbstractController {
             }
         }
 
-        $this->setTemplateView('cms/backend/asset.album', array(
+        $this->setTemplateView('cms/backend/asset.folder', array(
             'form' => $form->getView(),
-            'album' => $album,
+            'folder' => $folder,
             'referer' => $this->request->getQueryParameter('referer'),
         ));
     }
 
-    public function albumDeleteAction(OrmManager $orm, $locale, $album) {
-        $mediaAlbumModel = $orm->getMediaAlbumModel();
+    public function folderDeleteAction(OrmManager $orm, $locale, $folder) {
+        $assetFolderModel = $orm->getAssetFolderModel();
 
-        $album = $mediaAlbumModel->getById($album);
-        if (!$album) {
+        $folder = $assetFolderModel->getById($folder);
+        if (!$folder) {
             $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
             return;
         }
 
         if ($this->request->isPost()) {
-            $mediaAlbumModel->delete($album);
+            $assetFolderModel->delete($folder);
 
-            $album = $album->getParentAlbumId();
-            if (!$album) {
-                $album = '';
+            $folder = $folder->getParentfolderId();
+            if (!$folder) {
+                $folder = '';
             }
 
-            $url = $this->getUrl('asset.album.overview', array('locale' => $locale, 'album' => $album));
+            $url = $this->getUrl('asset.folder.overview', array('locale' => $locale, 'folder' => $folder));
 
             $this->response->setRedirect($url);
 
@@ -243,41 +242,41 @@ class AssetsController extends AbstractController {
         }
 
         $this->setTemplateView('cms/backend/asset.delete', array(
-            'name' => $album->name,
+            'name' => $folder->name,
             'referer' => $this->request->getQueryParameter('referer'),
         ));
     }
 
     public function itemAction(OrmManager $orm, FileBrowser $fileBrowser, $locale, $item = null) {
-        $mediaAlbumModel = $orm->getMediaAlbumModel();
-        $mediaModel = $orm->getMediaModel();
+        $assetFolderModel = $orm->getAssetFolderModel();
+        $assetModel = $orm->getassetModel();
 
         if ($item) {
-            $media = $mediaModel->getById($item);
-            if (!$media) {
+            $asset = $assetModel->getById($item);
+            if (!$asset) {
                 $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
                 return;
             }
         } else {
-            $media = $mediaModel->createEntry();
-            $media->album = $mediaAlbumModel->createProxy($this->request->getQueryParameter('album'), $locale);
+            $asset = $assetModel->createEntry();
+            $asset->folder = $assetFolderModel->createProxy($this->request->getQueryParameter('folder'), $locale);
         }
 
         $translator = $this->getTranslator();
 
         $data = array(
-            'album' => $media->album,
-            'name' => $media->name,
-            'description' => $media->description,
-            'file' => $media->value,
-            'thumbnail' => $media->thumbnail,
+            'folder' => $asset->folder,
+            'name' => $asset->name,
+            'description' => $asset->description,
+            'file' => $asset->value,
+            'thumbnail' => $asset->thumbnail,
         );
 
         $form = $this->createFormBuilder($data);
-        $form->addRow('album', 'object', array(
-            'label' => $translator->translate('label.album'),
-            'options' => $mediaAlbumModel->find(array('locale' => $locale)),
+        $form->addRow('folder', 'object', array(
+            'label' => $translator->translate('label.folder'),
+            'options' => $assetFolderModel->find(array('locale' => $locale)),
             'value' => 'id',
             'property' => 'name',
             'validators' => array(
@@ -309,7 +308,7 @@ class AssetsController extends AbstractController {
         $form = $form->build();
         if ($form->isSubmitted()) {
             if ($this->request->getBodyParameter('cancel')) {
-                $url = $this->getUrl('asset.overview.album', array('locale' => $locale, 'album' => $media->album->id));
+                $url = $this->getUrl('asset.overview.folder', array('locale' => $locale, 'folder' => $asset->folder->id));
 
                 $this->response->setRedirect($url);
 
@@ -321,42 +320,42 @@ class AssetsController extends AbstractController {
 
                 $data = $form->getData();
 
-                $media->dataLocale = $locale;
-                $media->album = $data['album'];
-                $media->name = $data['name'];
-                $media->description = $data['description'];
-                $media->value = $data['file'];
-                $media->thumbnail = $data['thumbnail'];
+                $asset->dataLocale = $locale;
+                $asset->folder = $data['folder'];
+                $asset->name = $data['name'];
+                $asset->description = $data['description'];
+                $asset->value = $data['file'];
+                $asset->thumbnail = $data['thumbnail'];
 
-                $file = $fileBrowser->getFile($media->value);
+                $file = $fileBrowser->getFile($asset->value);
                 if (!$file) {
-                    $file = $fileBrowser->getPublicFile($media->value);
+                    $file = $fileBrowser->getPublicFile($asset->value);
                 }
 
-                if (!$media->name) {
-                    $media->name = $file->getName();
+                if (!$asset->name) {
+                    $asset->name = $file->getName();
                 }
 
                 switch ($file->getExtension()) {
                     case 'mp3':
-                        $media->type = 'audio';
+                        $asset->type = 'audio';
 
                         break;
                     case 'gif':
                     case 'jpg':
                     case 'png':
-                        $media->type = 'image';
+                        $asset->type = 'image';
 
                         break;
                     default:
-                        $media->type = 'unknown';
+                        $asset->type = 'unknown';
 
                         break;
                 }
 
-                $mediaModel->save($media);
+                $assetModel->save($asset);
 
-                $url = $this->getUrl('asset.album.overview', array('locale' => $locale, 'album' => $media->album->id));
+                $url = $this->getUrl('asset.folder.overview', array('locale' => $locale, 'folder' => $asset->folder->id));
 
                 $this->response->setRedirect($url);
 
@@ -368,16 +367,16 @@ class AssetsController extends AbstractController {
 
         $this->setTemplateView('cms/backend/asset.item', array(
             'form' => $form->getView(),
-            'asset' => $media,
+            'asset' => $asset,
             'locale' => $locale,
             'referer' => $this->request->getQueryParameter('referer'),
         ));
     }
 
     public function itemDeleteAction(OrmManager $orm, $locale, $item) {
-        $mediaModel = $orm->getMediaModel();
+        $assetModel = $orm->getassetModel();
 
-        $item = $mediaModel->getById($item);
+        $item = $assetModel->getById($item);
         if (!$item) {
             $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
@@ -385,9 +384,9 @@ class AssetsController extends AbstractController {
         }
 
         if ($this->request->isPost()) {
-            $mediaModel->delete($item);
+            $assetModel->delete($item);
 
-            $url = $this->getUrl('asset.album.overview', array('locale' => $locale, 'album' => $item->album->id));
+            $url = $this->getUrl('asset.folder.overview', array('locale' => $locale, 'folder' => $item->folder->id));
 
             $this->response->setRedirect($url);
 

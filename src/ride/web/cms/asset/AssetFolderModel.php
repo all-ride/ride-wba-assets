@@ -4,7 +4,7 @@ namespace ride\web\cms\asset;
 
 use ride\library\orm\model\GenericModel;
 use ride\library\orm\query\ModelQuery;
-use ride\library\validation\exception\ValidationException;
+use ride\library\vwidation\exception\ValidationException;
 use ride\library\validation\ValidationError;
 
 use \Exception;
@@ -90,7 +90,7 @@ class AssetFolderModel extends GenericModel {
 
     /**
      * Create an array with the node hierarchy. Usefull for an options field.
-     * @param array $tree array with Album objects
+     * @param array $tree array with Folder objects
      * @param string $prefix prefix for the node names
      * @return array Array with the node id as key and the node name as value
      */
@@ -114,11 +114,11 @@ class AssetFolderModel extends GenericModel {
 
     /**
      * Get an array with the nodes and specify the number of levels for fetching the children of the nodes.
-     * @param int|Album $parent the parent node
+     * @param int|Folder $parent the parent node
      * @param string|array $excludes id's of nodes which are not to be included in the result
      * @param int $maxDepth maximum number of nested levels will be looked for
      * @param string $locale Locale code
-     * @param boolean $loadSettings set to true to load the AlbumSettings object of the node
+     * @param boolean $loadSettings set to true to load the FolderSettings object of the node
      * @param boolean $isFrontend Set to true to get only the nodes available in the frontend*
      * @return array Array with the node id as key and the node as value
      */
@@ -132,10 +132,10 @@ class AssetFolderModel extends GenericModel {
         }
 
         if ($parent && is_numeric($parent)) {
-            $parent = $this->getAlbum($parent, 0, $locale);
+            $parent = $this->getFolder($parent, 0, $locale);
         }
 
-        $tree = $this->getAlbums($parent, $excludes, $maxDepth, $locale, $includeUnlocalized);
+        $tree = $this->getFolders($parent, $excludes, $maxDepth, $locale, $includeUnlocalized);
 
         return $tree;
     }
@@ -149,7 +149,7 @@ class AssetFolderModel extends GenericModel {
      * @param boolean $includeUnlocalized
      * @return array Array with the node id as key and the Folder object with nested children as value
      */
-    public function getFolder(AssetFolderEntry $parent = null, $excludes = null, $maxDepth = null, $locale = null, $includeUnlocalized = null) {
+    public function getFolders(AssetFolderEntry $parent = null, $excludes = null, $maxDepth = null, $locale = null, $includeUnlocalized = null) {
         $query = $this->createQuery($locale);
         $query->setRecursiveDepth(0);
         $query->setFetchUnlocalized($includeUnlocalized);
