@@ -1,7 +1,7 @@
 {
     "button.add.folder": "Add a new folder",
     "button.add.asset": "Add a new asset item",
-
+	"title.asset.add": "New asset",
     "label.folder.current": "Current folder",
     "label.folder.info": "%folders% subfolders, %items% items",
     "label.folder": "Folder",

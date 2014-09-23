@@ -18,6 +18,7 @@
         "ride/lib-http": ">=0.2.1",
         "ride/lib-i18n": ">=0.1.0",
         "ride/lib-image": ">=0.2.0",
+		"ride/lib-media": ">=0.1.0",
         "ride/lib-mvc": ">=0.2.1",
         "ride/lib-reflection": ">=0.4.0",
         "ride/lib-router": ">=0.1.3",

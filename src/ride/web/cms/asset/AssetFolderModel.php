@@ -336,7 +336,7 @@ class AssetFolderModel extends GenericModel {
     }
 
     /**
-     * Get a order index for a new node
+     * Get an order index for a new node
      * @param string $parent path of the parent of the new node
      * @return int new order index
      */

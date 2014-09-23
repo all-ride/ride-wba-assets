@@ -2,8 +2,8 @@
 
 {block name="content_title" append}
     <div class="page-header">
-        {if $media->id}
-        <h1>{$media->name} <small>{translate key="title.asset.edit"}</small></h1>
+        {if $asset->id}
+        <h1>{$asset->name} <small>{translate key="title.asset.edit"}</small></h1>
         {else}
         <h1>{translate key="title.asset.add"}</h1>
         {/if}

@@ -7,6 +7,7 @@ use ride\library\i18n\I18n;
 use ride\library\orm\OrmManager;
 use ride\library\system\file\browser\FileBrowser;
 use ride\library\validation\exception\ValidationException;
+use ride\library\media\SimpleMediaFactory;
 
 use ride\web\base\controller\AbstractController;
 
@@ -39,10 +40,7 @@ class AssetController extends AbstractController {
         );
 
         $form = $this->createFormBuilder($data);
-        $form->addRow('asset', 'select', array(
-            'label' => $translator->translate('label.asset.current'),
-            'options' => array('' => '/') + $assetFolderModel->getDataList(),
-        ));
+
         $form->setRequest($this->request);
 
         $form = $form->build();
@@ -66,6 +64,7 @@ class AssetController extends AbstractController {
 
             $folder->assets = $assetModel->getAssetsForFolder($folder->id, $locale);
         } else {
+
             $folder = $assetFolderModel->createEntry();
             $folder->id = 0;
             $folder->children = $assetFolderModel->getFolders(null, null, 1, $locale);
@@ -151,6 +150,7 @@ class AssetController extends AbstractController {
 
         $data = array(
             'name' => $folder->name,
+            'description' => $folder->description,
             'parent' => $folder->getParentfolderId(),
         );
 
@@ -247,7 +247,7 @@ class AssetController extends AbstractController {
         ));
     }
 
-    public function assetAction(OrmManager $orm, FileBrowser $fileBrowser, $locale, $item = null) {
+    public function assetAction(OrmManager $orm, FileBrowser $fileBrowser, SimpleMediaFactory $mediaFactory, $locale, $item = null) {
         $assetFolderModel = $orm->getAssetFolderModel();
         $assetModel = $orm->getassetModel();
 
@@ -264,25 +264,40 @@ class AssetController extends AbstractController {
         }
 
         $translator = $this->getTranslator();
-
         $data = array(
-            'folder' => $asset->folder,
             'name' => $asset->name,
+            'folder' => $asset->folder,
             'description' => $asset->description,
             'file' => $asset->value,
             'thumbnail' => $asset->thumbnail,
         );
 
         $form = $this->createFormBuilder($data);
-        $form->addRow('folder', 'object', array(
-            'label' => $translator->translate('label.folder'),
-            'options' => $assetFolderModel->find(array('locale' => $locale)),
-            'value' => 'id',
-            'property' => 'name',
-            'validators' => array(
-                'required' => array(),
-            )
+
+        $form->addRow('assetUploadType', 'option', array(
+           'label' => $translator->translate('label.asset.upload.type'),
+            'options' => array(
+              'file' => 'file',
+              'web' => 'web',
+            ),
+            'default' => 'file',
         ));
+
+        $form->addRow('file', 'file', array(
+            'label' => $translator->translate('label.file'),
+            'path' => $fileBrowser->getApplicationDirectory()->getChild('data/upload/asset'),
+        ));
+
+        $form->addRow('webUrl', 'string', array(
+            'label' => $translator->translate('label.web'),
+        ));
+
+        $form->addRow('thumbnail', 'image', array(
+            'label' => $translator->translate('label.thumbnail'),
+            'path' => $fileBrowser->getPublicDirectory()->getChild('asset'),
+        ));
+
+
         $form->addRow('name', 'string', array(
             'label' => $translator->translate('label.name'),
             'filters' => array(
@@ -292,17 +307,7 @@ class AssetController extends AbstractController {
         $form->addRow('description', 'wysiwyg', array(
             'label' => $translator->translate('label.description'),
         ));
-        $form->addRow('file', 'file', array(
-            'label' => $translator->translate('label.file'),
-            'path' => $fileBrowser->getApplicationDirectory()->getChild('data/upload/asset'),
-            'validators' => array(
-                'required' => array(),
-            )
-        ));
-        $form->addRow('thumbnail', 'image', array(
-            'label' => $translator->translate('label.thumbnail'),
-            'path' => $fileBrowser->getPublicDirectory()->getChild('asset'),
-        ));
+
         $form->setRequest($this->request);
 
         $form = $form->build();
@@ -320,12 +325,27 @@ class AssetController extends AbstractController {
 
                 $data = $form->getData();
 
+                if ($data['assetUploadType'] == 'web') {
+                    if (!empty($data['webUrl'])) {
+                        $media = $mediaFactory->createMediaItem($data['webUrl']);
+                        k($media);
+                        k($media->getDescription());
+                    }
+                    else {
+                        Throw new ValidationException('Provide a media url');
+                    }
+                }
+                else if ($data['assetUploadType'] == 'file' && empty($data['file'])) {
+                    Throw new ValidationException('Provide a file');
+                }
+
                 $asset->dataLocale = $locale;
                 $asset->folder = $data['folder'];
                 $asset->name = $data['name'];
                 $asset->description = $data['description'];
                 $asset->value = $data['file'];
                 $asset->thumbnail = $data['thumbnail'];
+
 
                 $file = $fileBrowser->getFile($asset->value);
                 if (!$file) {
@@ -361,7 +381,7 @@ class AssetController extends AbstractController {
 
                 return;
             } catch (ValidationException $exception) {
-                $this->setValidationException($exception, $form);
+                $this->setValidationException($exception, $form, $exception->getMessage());
             }
         }
 

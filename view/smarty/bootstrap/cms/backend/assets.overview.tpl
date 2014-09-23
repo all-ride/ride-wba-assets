@@ -9,17 +9,14 @@
 
 {block name="content_title" append}
     <div class="page-header">
-        <h1>{translate key="title.asset"}</h1>
+        <h1>{translate key="title.assets"}</h1>
     </div>
 {/block}
 
 {block name="content_body" append}
     {include file="base/form.prototype"}
-    <form action="{$app.url.request}" method="POST" id="{$form->getId()}" class="form-horizontal">
-        {call formRow form=$form row="folder"}
-    </form>
 
-    <div class="btn-group media-actions">
+    <div class="btn-group asset-actions">
         <a href="{url id="assets.folder.add" parameters=["locale" => $locale]}?folder={$folder->id}" class="btn btn-default btn-small">{translate key="button.add.folder"}</a>
         <a href="{url id="asset.add" parameters=["locale" => $locale]}?folder={$folder->id}" class="btn btn-default btn-small">{translate key="button.add.asset"}</a>
     </div>
@@ -28,16 +25,16 @@
         <div class="description">{$folder->description}</div>
     {/if}
 <div class="row-fluid">
-    <div class="col-md-6 media-items">
+    <div class="col-md-6 assets">
         <h3>{translate key="title.folders"}</h3>
 {if $folder->children}
     {foreach $folder->children as $child}
-        <div class="row-fluid media-item" id="folder-{$child->id}">
-            <div class="media-handle media-folder"></div>
+        <div class="row-fluid asset-item" id="folder-{$child->id}">
+            <div class="asset-handle asset-folder"></div>
             <a href="{url id="assets.folder.overview" parameters=["locale" => $locale, "folder" => $child->id]}">{$child->name}</a>
             {$child->description}
             <div class="info text-muted">
-                {translate key="label.folder.info" folders=count($child->children) items=count($child->media)}
+                {translate key="label.folder.info" folders=count($child->children) items=count($child->assets)}
             </div>
             <div class="btn-group">
                 <a href="{url id="assets.folder.edit" parameters=["locale" => $locale, "folder" => $child->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
@@ -51,29 +48,29 @@
 {/if}
     </div>
 
-    <div class="col-md-6 media-items">
+    <div class="col-md-6 assets">
         <h3>{translate key="label.assets"}</h3>
-{if $folder->media}
-    {foreach $folder->media as $media}
-        <div class="row-fluid media-item clearfix" id="item-{$media->id}">
+{if $folder->assets}
+    {foreach $folder->assets as $asset}
+        <div class="row-fluid assets clearfix" id="item-{$asset->id}">
             <div class="clearfix">
-                <div class="media-handle media-{$media->type}"></div>
-                {if $media->thumbnail}
+                <div class="asset-handle assets-{$asset->type}"></div>
+                {if $asset->thumbnail}
                 <div class="image">
-                    {image src=$media->thumbnail thumbnail="crop" width=100 height=100}
+                    {image src=$asset->thumbnail thumbnail="crop" width=100 height=100}
                 </div>
-                {elseif $media->type == 'image'}
+                {elseif $asset->type == 'image'}
                 <div class="image">
-                    {image src=$media->value thumbnail="crop" width=100 height=100}
+                    {image src=$asset->value thumbnail="crop" width=100 height=100}
                 </div>
                 {/if}
                 <div>
-                    <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $media->id]}">{$media->name}</a>
-                    {$media->description}
+                    <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}">{$asset->name}</a>
+                    {$asset->description}
                 </div>
                 <div class="btn-group">
-                    <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $media->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
-                    <a href="{url id="asset.delete" parameters=["locale" => $locale, "item" => $media->id]}" class="btn btn-default btn-sm btn-confirm" data-message="Are you sure you want to delete {$media->name|escape}?">{translate key="button.delete"}</a>
+                    <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}" class="btn btn-default btn-sm">{translate key="button.edit"}</a>
+                    <a href="{url id="asset.delete" parameters=["locale" => $locale, "item" => $asset->id]}" class="btn btn-default btn-sm btn-confirm" data-message="Are you sure you want to delete {$asset->name|escape}?">{translate key="button.delete"}</a>
                 </div>
             </div>
             <hr />
@@ -87,7 +84,7 @@
 {/block}
 
 {block name="styles" append}
-    <link href="{$app.url.base}/css/cms/media.css" rel="stylesheet" media="screen">
+    <link href="{$app.url.base}/css/cms/assets.css" rel="stylesheet" media="screen">
 {/block}
 
 {block name="scripts" append}
@@ -104,11 +101,11 @@
 
             var sortUrl = "{url id="assets.folder.sort" parameters=["locale" => $locale, "folder" => $folder->id]}";
 
-            $(".media-items").sortable({
+            $(".assets").sortable({
                 axis: "y",
                 cursor: "move",
                 handle: ".asset-handle",
-                items: "> .asset-item",
+                items: "> .asset",
                 select: false,
                 scroll: true,
                 update: function(event, ui) {

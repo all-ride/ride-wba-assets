@@ -2,10 +2,10 @@
 
 {block name="content_title" append}
     <div class="page-header">
-        {if $album->id}
-        <h1>{$album->name} <small>{translate key="title.album.edit"}</small></h1>
+        {if $folder->id}
+        <h1>{$folder->name} <small>{translate key="title.folder.edit"}</small></h1>
         {else}
-        <h1>{translate key="title.album.add"}</h1>
+        <h1>{translate key="title.folder.add"}</h1>
         {/if}
     </div>
 {/block}
