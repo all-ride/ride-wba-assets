@@ -328,8 +328,13 @@ class AssetController extends AbstractController {
                 if ($data['assetUploadType'] == 'web') {
                     if (!empty($data['webUrl'])) {
                         $media = $mediaFactory->createMediaItem($data['webUrl']);
-                        k($media);
-                        k($media->getDescription());
+                        $asset->description = $media->getDescription();
+                        $asset->name = $media->getTitle();
+                        $asset->value = $media->getUrl();
+                        $asset->thumbnail = $media->getThumbnailUrl();
+                        $asset->folder = $data['folder'];
+                        $asset->source = 'web';
+                        $asset->type = $media->getType();
                     }
                     else {
                         Throw new ValidationException('Provide a media url');
@@ -338,39 +343,41 @@ class AssetController extends AbstractController {
                 else if ($data['assetUploadType'] == 'file' && empty($data['file'])) {
                     Throw new ValidationException('Provide a file');
                 }
+                else if ($data['assetUploadType'] == 'file') {
+                    $asset->dataLocale = $locale;
+                    $asset->folder = $data['folder'];
+                    $asset->name = $data['name'];
+                    $asset->description = $data['description'];
+                    $asset->value = $data['file'];
+                    $asset->thumbnail = $data['thumbnail'];
+                    $asset->source = 'file';
 
-                $asset->dataLocale = $locale;
-                $asset->folder = $data['folder'];
-                $asset->name = $data['name'];
-                $asset->description = $data['description'];
-                $asset->value = $data['file'];
-                $asset->thumbnail = $data['thumbnail'];
+                    $file = $fileBrowser->getFile($asset->value);
 
+                    if (!$file) {
+                        $file = $fileBrowser->getPublicFile($asset->value);
+                    }
 
-                $file = $fileBrowser->getFile($asset->value);
-                if (!$file) {
-                    $file = $fileBrowser->getPublicFile($asset->value);
-                }
+                    if (!$asset->name) {
+                        $asset->name = $file->getName();
+                    }
 
-                if (!$asset->name) {
-                    $asset->name = $file->getName();
-                }
+                    switch ($file->getExtension()) {
+                        case 'mp3':
+                            $asset->type = 'audio';
 
-                switch ($file->getExtension()) {
-                    case 'mp3':
-                        $asset->type = 'audio';
+                            break;
+                        case 'gif':
+                        case 'jpg':
+                        case 'png':
+                            $asset->type = 'image';
 
-                        break;
-                    case 'gif':
-                    case 'jpg':
-                    case 'png':
-                        $asset->type = 'image';
+                            break;
+                        default:
+                            $asset->type = 'unknown';
 
-                        break;
-                    default:
-                        $asset->type = 'unknown';
-
-                        break;
+                            break;
+                    }
                 }
 
                 $assetModel->save($asset);
