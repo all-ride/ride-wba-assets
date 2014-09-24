@@ -16,12 +16,10 @@
     </model>
     <model name="Asset" modelClass="ride\web\cms\asset\AssetModel" entryClass="ride\web\cms\asset\AssetEntry">
         <field name="folder" model="AssetFolder" relation="belongsTo">
-            <validation name="required" />
         </field>
         <field name="orderIndex" type="integer" />
         <field name="name" type="string" localized="true">
             <option name="label.name" value="label.name" />
-
             <validation name="required" />
         </field>
         <field name="description" type="wysiwyg" localized="true">

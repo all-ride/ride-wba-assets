@@ -85,5 +85,4 @@ class AssetFolderEntry extends OrmAssetFolderEntry {
 
         return substr_count($this->parent, AssetFolderModel::PATH_SEPARATOR) + 1;
     }
-
 }

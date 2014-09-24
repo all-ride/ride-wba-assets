@@ -69,7 +69,11 @@ class AssetController extends AbstractController {
             $folder->id = 0;
             $folder->children = $assetFolderModel->getFolders(null, null, 1, $locale);
             $folder->assets = $assetModel->getAssetsForFolder(null, $locale);
+            $folder->name = "Top folder";
+            $folder->description = "This is the top folder.";
         }
+
+        k($assetFolderModel->getBreadcrumbs($folder));
 
         foreach ($folder->children as $child) {
             $child->assets = $assetModel->getAssetsForFolder($child->id, $locale);
@@ -143,7 +147,7 @@ class AssetController extends AbstractController {
             }
         } else {
             $folder = $assetFolderModel->createEntry();
-            $folder->parent = $this->request->getQueryParameter('folder');
+            $folder->parent = $this->request->getQueryParameter('folder') != NULL ? $this->request->getQueryParameter('folder') : 0;
         }
 
         $translator = $this->getTranslator();
@@ -161,9 +165,6 @@ class AssetController extends AbstractController {
         ));
         $form->addRow('name', 'string', array(
             'label' => $translator->translate('label.name'),
-            'validators' => array(
-                'required' => array(),
-            )
         ));
         $form->addRow('description', 'wysiwyg', array(
             'label' => $translator->translate('label.description'),
@@ -260,7 +261,8 @@ class AssetController extends AbstractController {
             }
         } else {
             $asset = $assetModel->createEntry();
-            $asset->folder = $assetFolderModel->createProxy($this->request->getQueryParameter('folder'), $locale);
+            $folder =  $assetFolderModel->createProxy($this->request->getQueryParameter('folder'), $locale);
+            $asset->folder = $folder->id > 0 ? $folder : NULL;
         }
 
         $translator = $this->getTranslator();
@@ -309,7 +311,6 @@ class AssetController extends AbstractController {
         ));
 
         $form->setRequest($this->request);
-
         $form = $form->build();
         if ($form->isSubmitted()) {
             if ($this->request->getBodyParameter('cancel')) {
@@ -322,7 +323,6 @@ class AssetController extends AbstractController {
 
             try {
                 $form->validate();
-
                 $data = $form->getData();
 
                 if ($data['assetUploadType'] == 'web') {
@@ -381,13 +381,15 @@ class AssetController extends AbstractController {
                 }
 
                 $assetModel->save($asset);
-
-                $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $asset->folder->id));
+                $folder_id = isset($asset->folder) ? $asset->folder->id : 0;
+                $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $folder_id));
 
                 $this->response->setRedirect($url);
 
                 return;
             } catch (ValidationException $exception) {
+                //echo "<pre>" . $exception->getTraceAsString() . "</pre>";
+                echo $exception->getErrorsAsString();
                 $this->setValidationException($exception, $form, $exception->getMessage());
             }
         }

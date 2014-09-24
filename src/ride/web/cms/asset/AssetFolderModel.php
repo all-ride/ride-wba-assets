@@ -227,7 +227,7 @@ class AssetFolderModel extends GenericModel {
      * @param Folder $folder
      * @return integer
      */
-    public function getChildrenLevelsForAlbum(AssetFolderEntry $folder) {
+    public function getChildrenLevelsForFolder(AssetFolderEntry $folder) {
         $path = $folder->getPath();
 
         $query = $this->createQuery();
@@ -380,6 +380,30 @@ class AssetFolderModel extends GenericModel {
         $this->delete($children);
 
         return $data;
+    }
+
+    /**
+     * Returns the full breadcrumb for this folder.
+     * @param AssetFolderEntry $folder The folder to render the breadcrumbs for.
+     * @return Breadcrumb array
+     */
+    public function getBreadcrumbs(AssetFolderEntry $folder) {
+        $folders = array();
+
+        $folders = array(
+            $folder->getId() => $folder->getName(),
+        );
+
+        if ($folder->getParentFolderId() != NULL) {
+            do  {
+                $folder = $this->getFolder($folder->getParentFolderId());
+                $folders = array(
+                    $folder->getId() => $folder->getName(),
+                );
+            } while ($folder->getParentFolderId() != NULL);
+        }
+
+        return array_reverse($folders, true);
     }
 
 }
