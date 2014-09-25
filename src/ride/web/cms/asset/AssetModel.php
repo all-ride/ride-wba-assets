@@ -14,10 +14,14 @@ class AssetModel extends GenericModel {
         if (is_array($folder)) {
             $query->addCondition('{folder} IN %1%', $folder);
         } else {
-            $query->addCondition('{folder} = %1%', $folder);
+            if ($folder != NULL) {
+                $query->addCondition('{folder} = %1%', $folder);
+            }
+            else {
+                $query->addCondition('{folder} IS NULL');
+            }
         }
         $query->addOrderBy('{orderIndex} ASC');
-
         return $query->query();
     }
 }

@@ -52,7 +52,7 @@
             "methods": ["head", "get", "post"]
         },
         {
-            "path": "/content/assets/%locale%/asset/%itemt%/delete",
+            "path": "/content/assets/%locale%/asset/%item%/delete",
             "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
             "action": "itemDeleteAction",
             "id": "asset.delete"

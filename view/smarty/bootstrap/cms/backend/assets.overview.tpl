@@ -14,10 +14,19 @@
 {/block}
 
 {block name="content_body" append}
+    <div class="breadcrumbs">
+        <ol class="breadcrumb">
+            <li>
+                <a href="{url id="assets.folder.overview" parameters=["locale" => $locale, "folder" => '']}">{translate key="label.assets"}</a>
+            </li>
+            {foreach $breadcrumbs as $id => $name}
+                <li>
+                    <a href="{url id="assets.folder.overview" parameters=["locale" => $locale, "folder" => $id]}">{$name}</a>
+                </li>
+            {/foreach}
+        </ol>
+    </div>
     {include file="base/form.prototype"}
-    {if $folder->name}
-        <h2 class="folder-namer">{$folder->name}</h2>
-    {/if}
     <div class="folder-top">
         <div class="btn-group asset-actions">
             <a href="{url id="assets.folder.add" parameters=["locale" => $locale]}?folder={$folder->id}"
@@ -55,12 +64,12 @@
                             <div class="asset-handle assets-{$asset->type}"></div>
                             {if $asset->thumbnail}
                                 <div class="image">
-                                    {image src=$asset->thumbnail thumbnail="crop" width=100 height=100}
+                                    <img src="{image src=$asset->thumbnail width=125 height=125 transformation="crop"}" />
                                 </div>
                             {elseif $asset->type == 'image'}
-                                <div class="image">
-                                    {image src=$asset->value thumbnail="crop" width=100 height=100}
-                                </div>
+                                {*<div class="image">*}
+                                    {*{image src=$asset->value width=100 height=100}*}
+                                {*</div>*}
                             {/if}
                             <div>
                                 <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}">{$asset->name}</a>

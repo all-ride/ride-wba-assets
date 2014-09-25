@@ -53,7 +53,7 @@ class AssetController extends AbstractController {
 
             return;
         }
-
+        $breadcrumbs = array();
         if ($folder) {
             $folder = $assetFolderModel->getFolder($folder, 2, $locale);
             if (!$folder) {
@@ -63,18 +63,15 @@ class AssetController extends AbstractController {
             }
 
             $folder->assets = $assetModel->getAssetsForFolder($folder->id, $locale);
+            $breadcrumbs = $assetFolderModel->getBreadcrumbs($folder);
         } else {
 
             $folder = $assetFolderModel->createEntry();
             $folder->id = 0;
             $folder->children = $assetFolderModel->getFolders(null, null, 1, $locale);
             $folder->assets = $assetModel->getAssetsForFolder(null, $locale);
-            $folder->name = "Top folder";
-            $folder->description = "This is the top folder.";
+            $folder->name = "Assets";
         }
-
-        k($assetFolderModel->getBreadcrumbs($folder));
-
         foreach ($folder->children as $child) {
             $child->assets = $assetModel->getAssetsForFolder($child->id, $locale);
         }
@@ -82,6 +79,7 @@ class AssetController extends AbstractController {
         $this->setTemplateView('cms/backend/assets.overview', array(
             'form' => $form->getView(),
             'folder' => $folder,
+            'breadcrumbs' => $breadcrumbs,
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
         ));
@@ -137,9 +135,9 @@ class AssetController extends AbstractController {
 
     public function folderAction(OrmManager $orm, $locale, $folder = null) {
         $assetFolderModel = $orm->getAssetFolderModel();
-
         if ($folder) {
             $folder = $assetFolderModel->getById($folder);
+            $folderParent = $folder->getId();
             if (!$folder) {
                 $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
@@ -147,7 +145,7 @@ class AssetController extends AbstractController {
             }
         } else {
             $folder = $assetFolderModel->createEntry();
-            $folder->parent = $this->request->getQueryParameter('folder') != NULL ? $this->request->getQueryParameter('folder') : 0;
+            $folderParent = $this->request->getQueryParameter('folder') ? $this->request->getQueryParameter('folder') : '';
         }
 
         $translator = $this->getTranslator();
@@ -155,9 +153,8 @@ class AssetController extends AbstractController {
         $data = array(
             'name' => $folder->name,
             'description' => $folder->description,
-            'parent' => $folder->getParentfolderId(),
+            'parent' => $folderParent,
         );
-
         $form = $this->createFormBuilder($data);
         $form->addRow('parent', 'select', array(
             'label' => $translator->translate('label.parent'),
@@ -173,7 +170,7 @@ class AssetController extends AbstractController {
         $form = $form->build();
         if ($form->isSubmitted()) {
             if ($this->request->getBodyParameter('cancel')) {
-                $folder = $folder->getParentfolderId();
+                $folder = $folder->getParentFolderId();
                 if (!$folder) {
                     $folder = '';
                 }
@@ -192,11 +189,8 @@ class AssetController extends AbstractController {
 
                 $folder->name = $data['name'];
                 $folder->description = $data['description'];
-                $folder->parent = $data['parent'];
 
-                if (!$folder->parent) {
-                    $folder->parent = null;
-                }
+                $folder->parent = $data['parent'] > 0 ? $data['parent'] : NULL;
 
                 $assetFolderModel->save($folder);
 

@@ -96,7 +96,6 @@ class AssetFolderModel extends GenericModel {
      */
     public function createListFromFolderTree(array $tree, $separator = '/', $prefix = '') {
         $list = array();
-
         foreach ($tree as $folder) {
             $newPrefix = $prefix . $separator . $folder->name;
 
@@ -387,23 +386,16 @@ class AssetFolderModel extends GenericModel {
      * @param AssetFolderEntry $folder The folder to render the breadcrumbs for.
      * @return Breadcrumb array
      */
-    public function getBreadcrumbs(AssetFolderEntry $folder) {
+    public function getBreadcrumbs(AssetFolderEntry $folder)
+    {
         $folders = array();
+        $folders[$folder->getId()] = $folder->getName();
 
-        $folders = array(
-            $folder->getId() => $folder->getName(),
-        );
-
-        if ($folder->getParentFolderId() != NULL) {
-            do  {
-                $folder = $this->getFolder($folder->getParentFolderId());
-                $folders = array(
-                    $folder->getId() => $folder->getName(),
-                );
-            } while ($folder->getParentFolderId() != NULL);
+        while ($folder->getParentFolderId() != NULL) {
+            $folder = $this->getFolder($folder->getParentFolderId());
+            $folders[$folder->getId()] = $folder->getName();
         }
 
         return array_reverse($folders, true);
     }
-
 }
