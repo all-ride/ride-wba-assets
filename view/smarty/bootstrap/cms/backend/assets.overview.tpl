@@ -60,8 +60,9 @@
             {if $folder->assets}
                 {foreach $folder->assets as $asset}
                     <div class="row-fluid assets clearfix" id="item-{$asset->id}">
-                        <div class="clearfix">
+                        <div class="clearfix span4">
                             <div class="asset-handle assets-{$asset->type}"></div>
+                            <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}">
                             {if $asset->thumbnail}
                                 <div class="image">
                                     <img src="{image src=$asset->thumbnail width=125 height=125 transformation="crop"}" />
@@ -73,7 +74,6 @@
                             {/if}
                             <div>
                                 <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}">{$asset->name}</a>
-                                {$asset->description}
                             </div>
                             <div class="btn-group">
                                 <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}"
@@ -82,6 +82,7 @@
                                    class="btn btn-default btn-sm btn-confirm"
                                    data-message="Are you sure you want to delete {$asset->name|escape}?">{translate key="button.delete"}</a>
                             </div>
+                            </a>
                         </div>
                         <hr/>
                     </div>
