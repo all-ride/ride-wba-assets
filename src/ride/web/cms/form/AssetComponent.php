@@ -37,7 +37,7 @@ class AssetComponent extends AbstractComponent {
      * Constructs a new AssetComponent
      * @param MediaFactory $mediaFactory
      */
-    public function __construct(MediaFactory $mediaFactory, Client $client, $sme) {
+    public function __construct(MediaFactory $mediaFactory, Client $client, $thumbnailFolder) {
         $this->mediaFactory = $mediaFactory;
         $this->client = $client;
         $this->path = $thumbnailFolder;

@@ -1,19 +1,23 @@
 {
-	"class": "ride\\web\\cms\\form\\AssetComponent",
-	"id": "asset.component",
-	"calls": [
-		{
-			"method": "__construct",
-			"arguments": [
-				{
-					"name": "thumbnailFolder",
-					"type": "parameter",
-					"properties": {
-						"key": "thumbnail.folder",
-						"default": "data/upload/assets/thumbnails"
-					}
-				}
-			]
-		}
-	]
+    "dependencies": [
+        {
+            "class": "ride\\web\\cms\\form\\AssetComponent",
+            "id": "asset.component",
+            "calls": [
+                {
+                    "method": "__construct",
+                    "arguments": [
+                        {
+                            "name": "thumbnailFolder",
+                            "type": "parameter",
+                            "properties": {
+                                "key": "thumbnail.folder",
+                                "default": "data/upload/assets/thumbnails"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
 }
