@@ -1,3 +1,4 @@
 {
-	"thumbnail.folder":  "%application%/data/upload/assets/thumbnails"
+	"assets.folder": "%public%/data/upload/assets/",
+	"thumbnail.folder":  "%public%/data/upload/assets/thumbnails"
 }

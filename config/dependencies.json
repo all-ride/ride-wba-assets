@@ -14,8 +14,16 @@
                                 "key": "thumbnail.folder",
                                 "default": "data/upload/assets/thumbnails"
                             }
-                        }
-                    ]
+                        },
+						{
+							"name": "assetFolder",
+							"type": "parameter",
+							"properties": {
+								"key": "assets.folder",
+								"default": "%public%/data/upload/assets"
+							}
+						}
+					]
                 }
             ]
         }

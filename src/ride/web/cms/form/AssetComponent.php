@@ -18,8 +18,13 @@ class AssetComponent extends AbstractComponent {
     protected $thumbnailFolder;
 
     /**
+     * @var String
+     * The path asset files are saved to.
+     */
+    protected $assetFolder;
+    /**
      * @var \ride\web\cms\asset\AssetEntry
-     * The asset
+     * The assetm
      */
     protected $asset;
 
@@ -37,10 +42,11 @@ class AssetComponent extends AbstractComponent {
      * Constructs a new AssetComponent
      * @param MediaFactory $mediaFactory
      */
-    public function __construct(MediaFactory $mediaFactory, Client $client, $thumbnailFolder) {
+    public function __construct(MediaFactory $mediaFactory, Client $client, $thumbnailFolder, $assetFolder) {
         $this->mediaFactory = $mediaFactory;
         $this->client = $client;
         $this->thumbnailFolder = $thumbnailFolder;
+        $this->assetFolder = $assetFolder;
     }
 
     /**
@@ -79,7 +85,7 @@ class AssetComponent extends AbstractComponent {
         $asset->setName($data['name']);
         $asset->SetThumbnail($data['thumbnail']);
         $asset->setIsUrl(FALSE);
-        if ($data['isUrl']) {
+        if ($data['isUrl'] != 1) {
             $media = $this->mediaFactory->createMediaItem($data['url']);
             $asset->setIsUrl(TRUE);
             if ($data['thumbnail'] == NULL) {
@@ -113,7 +119,7 @@ class AssetComponent extends AbstractComponent {
         ));
         $builder->addRow('file', 'file', array(
             'label' => $translator->translate('label.file'),
-            'path' => $this->thumbnailFolder,
+            'path' => $this->assetFolder,
         ));
         $builder->addRow('url', 'string', array(
             'label' => $translator->translate('label.url'),
@@ -129,6 +135,7 @@ class AssetComponent extends AbstractComponent {
                 'trim' => array(),
             )
         ));
+
         $builder->addRow('description', 'wysiwyg', array(
             'label' => $translator->translate('label.description'),
         ));
