@@ -13,7 +13,7 @@ class AssetComponent extends AbstractComponent {
 
     /**
      * @var String
-     * The path assets are saved to.
+     * The path media thumbnails are saved to.
      */
     protected $thumbnailFolder;
 
@@ -40,7 +40,7 @@ class AssetComponent extends AbstractComponent {
     public function __construct(MediaFactory $mediaFactory, Client $client, $thumbnailFolder) {
         $this->mediaFactory = $mediaFactory;
         $this->client = $client;
-        $this->path = $thumbnailFolder;
+        $this->thumbnailFolder = $thumbnailFolder;
     }
 
     /**
@@ -90,7 +90,10 @@ class AssetComponent extends AbstractComponent {
                     file_put_contents($img, $response->getBody());
                     $asset->setThumbnail($img);
                 }
-                k($asset->getId());
+                if (!$asset->getId()) {
+                    $asset->setName($media->getTitle());
+                    $asset->setDescription($media->getDescription());
+                }
             }
         }
         return $asset;
@@ -110,7 +113,7 @@ class AssetComponent extends AbstractComponent {
         ));
         $builder->addRow('file', 'file', array(
             'label' => $translator->translate('label.file'),
-            'path' => $this->path,
+            'path' => $this->thumbnailFolder,
         ));
         $builder->addRow('url', 'string', array(
             'label' => $translator->translate('label.url'),
@@ -118,7 +121,7 @@ class AssetComponent extends AbstractComponent {
 
         $builder->addRow('thumbnail', 'image', array(
             'label' => $translator->translate('label.thumbnail'),
-            'path' => $this->path,
+            'path' => $this->thumbnailFolder,
         ));
         $builder->addRow('name', 'string', array(
             'label' => $translator->translate('label.name'),

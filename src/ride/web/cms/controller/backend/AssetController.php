@@ -274,35 +274,7 @@ class AssetController extends AbstractController {
             try {
                 $form->validate();
                 $asset = $form->getData();
-                exit();
-                if ($data['assetUploadType'] == 'web') {
-                    if (!empty($data['webUrl'])) {
-                        $media = $mediaFactory->createMediaItem($data['webUrl']);
-                        $asset->value = $media->getUrl();
-                        $asset->source = 'web';
-                        $asset->type = $media->getType();
-                    } else {
-                        Throw new ValidationException('Provide a media url');
-                    }
-                }
-                else if ($data['assetUploadType'] == 'file' && empty($data['file'])) {
-                    Throw new ValidationException('Provide a file');
-                }
-                else if ($data['assetUploadType'] == 'file') {
-                    $asset->dataLocale = $locale;
-                    $asset->value = $data['file'];
-                    $asset->source = 'file';
-
-                    $file = $fileBrowser->getFile($asset->value);
-
-                    if (!$file) {
-                        $file = $fileBrowser->getPublicFile($asset->value);
-                    }
-
-                    if (!$asset->name) {
-                        $asset->name = $file->getName();
-                    }
-
+/*
                     switch ($file->getExtension()) {
                         case 'mp3':
                             $asset->type = 'audio';
@@ -319,7 +291,8 @@ class AssetController extends AbstractController {
 
                             break;
                     }
-                }
+*/
+
 
                 $assetModel->save($asset);
                 $folder_id = isset($asset->folder) ? $asset->folder->id : 0;
