@@ -7,6 +7,8 @@ use ride\library\i18n\I18n;
 use ride\library\orm\OrmManager;
 use ride\library\validation\exception\ValidationException;
 use ride\web\cms\form\AssetComponent;
+use ride\web\cms\form\EntryFolderComponent;
+use ride\library\media\MediaFactory;
 
 use ride\web\base\controller\AbstractController;
 
@@ -132,11 +134,10 @@ class AssetController extends AbstractController {
         }
     }
 
-    public function folderAction(OrmManager $orm, $locale, $folder = null) {
+    public function folderAction(OrmManager $orm, EntryFolderComponent $entryFolderComponent, $locale, $folder = null) {
         $assetFolderModel = $orm->getAssetFolderModel();
         if ($folder) {
             $folder = $assetFolderModel->getById($folder);
-            $folderParent = $folder->getId();
             if (!$folder) {
                 $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
@@ -145,28 +146,11 @@ class AssetController extends AbstractController {
         } else {
             $folder = $assetFolderModel->createEntry();
             $folderParent = $this->request->getQueryParameter('folder') ? $this->request->getQueryParameter('folder') : '';
+            $folder->parent = $folderParent;
         }
 
-        $translator = $this->getTranslator();
+        $form = $this->buildForm($entryFolderComponent, $folder);
 
-        $data = array(
-            'name' => $folder->name,
-            'description' => $folder->description,
-            'parent' => $folderParent,
-        );
-        $form = $this->createFormBuilder($data);
-        $form->addRow('parent', 'select', array(
-            'label' => $translator->translate('label.parent'),
-            'options' => array('' => '/') + $assetFolderModel->getDataList(array('locale' => $locale)),
-        ));
-        $form->addRow('name', 'string', array(
-            'label' => $translator->translate('label.name'),
-        ));
-        $form->addRow('description', 'wysiwyg', array(
-            'label' => $translator->translate('label.description'),
-        ));
-
-        $form = $form->build();
         if ($form->isSubmitted()) {
             if ($this->request->getBodyParameter('cancel')) {
                 $folder = $folder->getParentFolderId();
@@ -184,12 +168,7 @@ class AssetController extends AbstractController {
             try {
                 $form->validate();
 
-                $data = $form->getData();
-
-                $folder->name = $data['name'];
-                $folder->description = $data['description'];
-
-                $folder->parent = $data['parent'] > 0 ? $data['parent'] : NULL;
+                $folder = $form->getData();
 
                 $assetFolderModel->save($folder);
 
@@ -241,7 +220,7 @@ class AssetController extends AbstractController {
         ));
     }
 
-    public function assetAction(OrmManager $orm, AssetComponent $assetComponent, $locale, $item = null) {
+    public function assetAction(OrmManager $orm, AssetComponent $assetComponent, MediaFactory $mediaFactory, $locale, $item = null) {
         $assetFolderModel = $orm->getAssetFolderModel();
         $assetModel = $orm->getAssetModel();
 
@@ -258,10 +237,11 @@ class AssetController extends AbstractController {
             $asset->folder = $folder->id > 0 ? $folder : NULL;
         }
 
-        $translator = $this->getTranslator();
+        $media = $asset->isUrl ? $mediaFactory->createMediaItem($asset->value) : NULL;
 
         $form = $this->buildForm($assetComponent, $asset);
-        $form = $form->build();
+        $form->setId('asset-form');
+
         if ($form->isSubmitted()) {
             if ($this->request->getBodyParameter('cancel')) {
                 $url = $this->getUrl('assets.overview.folder', array('locale' => $locale, 'folder' => $asset->folder->id));
@@ -274,25 +254,6 @@ class AssetController extends AbstractController {
             try {
                 $form->validate();
                 $asset = $form->getData();
-/*
-                    switch ($file->getExtension()) {
-                        case 'mp3':
-                            $asset->type = 'audio';
-
-                            break;
-                        case 'gif':
-                        case 'jpg':
-                        case 'png':
-                            $asset->type = 'image';
-
-                            break;
-                        default:
-                            $asset->type = 'unknown';
-
-                            break;
-                    }
-*/
-
 
                 $assetModel->save($asset);
                 $folder_id = isset($asset->folder) ? $asset->folder->id : 0;
@@ -308,12 +269,15 @@ class AssetController extends AbstractController {
             }
         }
 
-        $this->setTemplateView('cms/backend/asset', array(
+        $view = $this->setTemplateView('cms/backend/asset', array(
             'form' => $form->getView(),
             'asset' => $asset,
             'locale' => $locale,
             'referer' => $this->request->getQueryParameter('referer'),
+            'media' => $media,
         ));
+
+        $view->addJavascript('js/cms/assets.js');
     }
 
     public function assetDeleteAction(OrmManager $orm, $locale, $item) {
