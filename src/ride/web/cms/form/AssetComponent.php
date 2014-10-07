@@ -110,7 +110,7 @@ class AssetComponent extends AbstractComponent
         $asset->setName($data['name']);
         $asset->SetThumbnail($data['thumbnail']);
         $asset->setIsUrl(FALSE);
-        if ($data['isUrl'] == 1) {
+        if ($data['isUrl'] == 1 && !empty($data['url'])) {
             $media = $this->mediaFactory->createMediaItem($data['url']);
             $asset->value = $data['url'];
             $asset->setIsUrl(TRUE);
@@ -139,7 +139,7 @@ class AssetComponent extends AbstractComponent
 
                     break;
             }
-        } else {
+        } else if (isset($data['file'])) {
             $file = $this->fileSystem->getFile($data['file']);
             if (empty($data['name'])) {
                 $fileName = $file->getName();

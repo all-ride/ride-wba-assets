@@ -20,7 +20,6 @@
         <field name="orderIndex" type="integer" />
         <field name="name" type="string" localized="true">
             <option name="label.name" value="label.name" />
-            <validation name="required" />
         </field>
         <field name="description" type="wysiwyg" localized="true">
             <option name="label.name" value="label.description" />

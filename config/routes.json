@@ -54,7 +54,7 @@
         {
             "path": "/content/assets/%locale%/asset/%item%/delete",
             "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
-            "action": "itemDeleteAction",
+            "action": "AssetDeleteAction",
             "id": "asset.delete"
         },
         {
