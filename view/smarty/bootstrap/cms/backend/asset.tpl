@@ -19,10 +19,23 @@
             {if $media}
                 <iframe width="560" height="315" src="{$media->getEmbedUrl()}" frameborder="0" allowfullscreen></iframe>
             {else}
-                <img src="{image src=$asset->thumbnail width=700 height=350 transformation="crop"}"/>
+                <img class="img-responsive" src="{image src=$asset->value}"/>
             {/if}
         </div>
         <div class="col-md-5">
+            <div class="source-data">
+                {if $asset->getId()}
+                    <div><label>{translate key="label.asset.value"}</label> : {$asset->value}</div>
+                    <div><label>{translate key="label.asset.type"}</label> : {$asset->type}</div>
+                    <div><label>{translate key="label.asset.source"}</label> : {$asset->source}</div>
+                    <div><label>{translate key="label.asset.created"}</label> : {$asset->dateAdded|date_format : "%d-%m-%Y %T"}</div>
+                    <div><label>{translate key="label.asset.modified"}</label> : {$asset->dateModified|date_format : "%d-%m-%Y %T"}</div>
+                    {if $dimension}
+                        <div><label>{translate key="label.asset.dimension"}</label> : {$dimension->getWidth()} x {$dimension->getHeight()}</div>
+                    {/if}
+                    <hr>
+                {/if}
+            </div>
             <form id="{$form->getId()}" class="form-horizontal" action="{$app.url.request}" method="POST" role="form"
                   enctype="multipart/form-data">
                 <fieldset>
@@ -34,6 +47,7 @@
                             {if $referer}
                                 <a href="{$referer}" class="btn">{translate key="button.cancel"}</a>
                             {/if}
+                                <a href="{url id="asset.delete" parameters=["locale" => $locale, "item" => $asset->getId()]}">{translate key="button.asset.delete"}</a>
                         </div>
                     </div>
                 </fieldset>

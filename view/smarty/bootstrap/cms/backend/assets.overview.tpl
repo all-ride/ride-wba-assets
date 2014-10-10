@@ -43,14 +43,11 @@
             {foreach $folder->children as $child}
                 <div class="col-md-2 asset-item" id="folder-{$child->id}">
                     <div class="asset-handle asset-folder"></div>
-                    <img src="{$app.url.base}/img/cms/media/folder.svg"/>
+                    <img src="{$app.url.base}/img/cms/media/folder.svg" width="150" height="150"/>
                     <a href="{url id="assets.folder.overview" parameters=["locale" => $locale, "folder" => $child->id]}">{$child->name}</a>
                     <div class="btn-group">
                         <a href="{url id="assets.folder.edit" parameters=["locale" => $locale, "folder" => $child->id]}"
                            class="btn btn-default btn-sm">{translate key="button.edit"}</a>
-                        <a href="{url id="assets.folder.delete" parameters=["locale" => $locale, "folder" => $child->id]}"
-                           class="btn btn-default btn-sm btn-confirm"
-                           data-message="Are you sure you want to delete {$child->name|escape}?">{translate key="button.delete"}</a>
                     </div>
                 </div>
             {/foreach}
@@ -61,23 +58,13 @@
                     <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}">
                         {if $asset->thumbnail}
                             <div class="image">
-                                <img src="{image src=$asset->thumbnail width=125 height=125 transformation="crop"}"/>
+                                <img src="{image src=$asset->thumbnail width=150 height=150 transformation="crop"}"/>
                             </div>
                         {elseif $asset->type == 'image'}
                             <div class="image">
                                 <img src="{image src=$asset->thumbnail width=125 height=125 transformation="crop"}"/>
                             </div>
                         {/if}
-                        <div>
-                            <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}">{$asset->name}</a>
-                        </div>
-                        <div class="btn-group">
-                            <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}"
-                               class="btn btn-default btn-sm">{translate key="button.edit"}</a>
-                            <a href="{url id="asset.delete" parameters=["locale" => $locale, "item" => $asset->id]}"
-                               class="btn btn-default btn-sm btn-confirm"
-                               data-message="Are you sure you want to delete {$asset->name|escape}?">{translate key="button.delete"}</a>
-                        </div>
                     </a>
                 </div>
             {/foreach}

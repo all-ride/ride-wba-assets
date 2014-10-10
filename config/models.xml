@@ -52,7 +52,6 @@
         <field name="description" type="wysiwyg" localized="true">
             <option name="label.name" value="label.description" />
         </field>
-        <field name="asset" model="Asset" relation="hasMany" />
         <field name="slug" type="string" localized="true" />
 
         <format name="title">{name}</format>

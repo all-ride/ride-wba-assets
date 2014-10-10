@@ -10,6 +10,9 @@ use ride\library\orm\model\GenericModel;
 class AssetModel extends GenericModel {
 
     public function getAssetsForFolder($folder, $locale = null) {
+        if ($folder == 0) {
+            $folder = NULL;
+        }
         $query = $this->createQuery($locale);
         if (is_array($folder)) {
             $query->addCondition('{folder} IN %1%', $folder);

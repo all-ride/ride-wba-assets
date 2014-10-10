@@ -5,6 +5,8 @@ namespace ride\web\cms\form;
 
 use ride\library\form\component\AbstractComponent;
 use ride\library\form\FormBuilder;
+use ride\library\image\transformation\CropTransformation;
+use ride\library\image\transformation\ResizeTransformation;
 use ride\web\cms\asset\AssetEntry;
 use ride\library\media\MediaFactory;
 use ride\library\http\client\Client;
@@ -12,6 +14,7 @@ use ride\library\validation\factory\ValidationFactory;
 use ride\library\validation\constraint\ConditionalConstraint;
 use ride\library\system\file\FileSystem;
 use ride\library\image\ImageFactory;
+use ride\library\image\Transformation\Transformation;
 
 class AssetComponent extends AbstractComponent
 {
@@ -44,6 +47,11 @@ class AssetComponent extends AbstractComponent
     protected $validationFactory;
 
     /**
+     * @var \ride\library\image\Transformation\Transformation
+     */
+    protected $transformation;
+
+    /**
      * @var \ride\library\http\client\Client;
      */
     protected $client;
@@ -58,7 +66,7 @@ class AssetComponent extends AbstractComponent
      * @param MediaFactory $mediaFactory
      */
     public function __construct(MediaFactory $mediaFactory, Client $client, ValidationFactory $validationFactory,
-                                FileSystem $fileSystem, ImageFactory $imageFactory, $thumbnailFolder, $assetFolder)
+                                FileSystem $fileSystem, ImageFactory $imageFactory, Transformation $transformation, $thumbnailFolder, $assetFolder)
     {
         $this->mediaFactory = $mediaFactory;
         $this->imageFactory = $imageFactory;
@@ -67,6 +75,7 @@ class AssetComponent extends AbstractComponent
         $this->fileSystem = $fileSystem;
         $this->thumbnailFolder = $thumbnailFolder;
         $this->assetFolder = $assetFolder;
+        $this->transformation = $transformation;
     }
 
     /**
@@ -93,7 +102,6 @@ class AssetComponent extends AbstractComponent
             'file' => ($data->isUrl == 0) ? $data->value : '',
             'url' => ($data->isUrl == 1) ? $data->value : '',
         );
-
         return $data;
     }
 
@@ -109,108 +117,101 @@ class AssetComponent extends AbstractComponent
         $asset->setDescription($data['description']);
         $asset->setName($data['name']);
         $asset->SetThumbnail($data['thumbnail']);
-        $asset->setIsUrl(FALSE);
-        if ($data['isUrl'] == 1 && !empty($data['url'])) {
-            $media = $this->mediaFactory->createMediaItem($data['url']);
-            $asset->value = $data['url'];
-            $asset->setIsUrl(TRUE);
-            if (!$asset->getId()) {
-                $asset->setName($media->getTitle());
-                $asset->setDescription($media->getDescription());
-            }
-            if ($data['thumbnail'] == NULL) {
-                $client = $this->client;
-                $response = $client->get($media->getThumbnailUrl());
-                if ($response->getStatusCode() == 200) {
-                    $img = $this->thumbnailFolder . '/' . $media->getId() . '_thumb.png';
-                    file_put_contents($img, $response->getBody());
-                    $asset->setThumbnail($img);
+
+        if (!$asset->getId()) {
+            $asset->setIsUrl(FALSE);
+            if ($data['isUrl'] == 1 && !empty($data['url'])) {
+                $media = $this->mediaFactory->createMediaItem($data['url']);
+                $asset->value = $data['url'];
+                $asset->setIsUrl(TRUE);
+                $data['name'] == NULL ? $asset->setName($media->getTitle()) : $asset->setName($data['name']);
+                $data['description'] == NULL ? $asset->setDescription($media->getDescription()) : $asset->setDescription($data['description']);
+                if ($data['thumbnail'] == NULL) {
+                    $client = $this->client;
+                    $response = $client->get($media->getThumbnailUrl());
+                    if ($response->getStatusCode() == 200) {
+                        $img = $this->thumbnailFolder . '/' . $media->getId() . '_thumb.png';
+                        file_put_contents($img, $response->getBody());
+                        $asset->setThumbnail($img);
+                    }
                 }
-            }
-            $asset->setSource($media->getType());
-            switch ($asset->source) {
-                case 'youtube':
-                case 'vimeo':
-                    $asset->type = 'video';
+                $asset->setSource($media->getType());
+                switch ($asset->source) {
+                    case 'youtube':
+                    case 'vimeo':
+                        $asset->type = 'video';
 
-                    break;
-                case 'soundcloud':
-                    $asset->type =' audio';
+                        break;
+                    case 'soundcloud':
+                        $asset->type =' audio';
 
-                    break;
-            }
-        } else if (isset($data['file'])) {
-            $file = $this->fileSystem->getFile($data['file']);
-            if (empty($data['name'])) {
-                $fileName = $file->getName();
-                $fileName = explode('.', $fileName);
-                array_pop($fileName);
-                $fileName = implode('_', $fileName);
-                $asset->setName($fileName);
-            }
-            if ($data['thumbnail'] == NULL) {
-                $thumb = $this->fileSystem->getFile($this->thumbnailFolder . '/' . $asset->name . '_thumb.png');
-                $image = $this->imageFactory->createImage();
-                $image->read($file);
+                        break;
+                }
+            } else if (isset($data['file'])) {
+                $file = $this->fileSystem->getFile($data['file']);
+                if (empty($data['name'])) {
+                    $fileName = $file->getName();
+                    $fileName = explode('.', $fileName);
+                    array_pop($fileName);
+                    $fileName = implode('_', $fileName);
+                    $asset->setName($fileName);
+                }
+                if ($data['thumbnail'] == NULL) {
+                    $asset->thumbnail = $data['file'];
+                }
 
-                $dimension = $image->getDimension();
-                $dimension->setWidth(150);
-                $dimension->setHeight(150);
-                $image = $image->resize($dimension);
-                $image->write($thumb);
-                $asset->setThumbnail($thumb->getPath());
-            }
+                $asset->value = $data['file'];
+                switch ($file->getExtension()) {
+                    case 'mp3':
+                        $asset->type = 'audio';
 
-            $asset->value = $data['file'];
-            switch ($file->getExtension()) {
-                case 'mp3':
-                    $asset->type = 'audio';
+                        break;
+                    case 'gif':
+                    case 'jpg':
+                    case 'png':
+                        $asset->type = 'image';
 
-                    break;
-                case 'gif':
-                case 'jpg':
-                case 'png':
-                    $asset->type = 'image';
+                        break;
+                    default:
+                        $asset->type = 'unknown';
 
-                    break;
-                default:
-                    $asset->type = 'unknown';
-
-                    break;
+                        break;
+                }
+                $asset->setSource('file');
             }
         }
-
 
         return $asset;
     }
 
     function prepareForm(FormBuilder $builder, array $options)
     {
-        k($options);
         $translator = $options['translator'];
         $fileBrowser = $options['fileBrowser'];
-
-        $builder->addRow('isUrl', 'option', array(
-            'label' => $translator->translate('label.asset.is.url'),
-            'options' => array(
-                0 => 'file',
-                1 => 'web',
-            ),
-            'default' => 0,
-        ));
-        $builder->addRow('file', 'file', array(
-            'label' => $translator->translate('label.file'),
-            'path' => $this->assetFolder,
-            'attributes' => array(
-                'class' => 'file-field',
-            ),
-        ));
-        $builder->addRow('url', 'string', array(
-            'label' => $translator->translate('label.url'),
-            'attributes' => array(
-                'class' => 'url-field',
-            ),
-        ));
+        $asset = $options['data'];
+        if (!$asset->getId()) {
+            $builder->addRow('isUrl', 'option', array(
+                'label' => $translator->translate('label.asset.is.url'),
+                'options' => array(
+                    0 => 'file',
+                    1 => 'web',
+                ),
+                'default' => 0,
+            ));
+            $builder->addRow('file', 'file', array(
+                'label' => $translator->translate('label.file'),
+                'path' => $this->assetFolder,
+                'attributes' => array(
+                    'class' => 'file-field',
+                ),
+            ));
+            $builder->addRow('url', 'string', array(
+                'label' => $translator->translate('label.url'),
+                'attributes' => array(
+                    'class' => 'url-field',
+                ),
+            ));
+        }
 
         $builder->addRow('thumbnail', 'image', array(
             'label' => $translator->translate('label.thumbnail'),

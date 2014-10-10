@@ -45,7 +45,7 @@
             "id": "assets.folder.add"
         },
         {
-            "path": "/content/assets/%locale%/asset/%item%/edit",
+            "path": "/content/assets/%locale%/asset/%item%/edit/",
             "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
             "action": "assetAction",
             "id": "asset.edit",

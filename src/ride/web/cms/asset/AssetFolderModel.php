@@ -36,14 +36,14 @@ class AssetFolderModel extends GenericModel {
      * @param string $locale code of the locale
      * @return Folder
      */
-    public function getFolder($id, $recursiveDepth = 1, $locale = null, $fetchUnlocalized = null) {
+    public function getFolder(AssetModel $assetModel, $id, $recursiveDepth = 1, $locale = null, $fetchUnlocalized = null) {
         $query = $this->createQuery($locale);
         $query->setRecursiveDepth(0);
         if ($fetchUnlocalized) {
             $query->setWillFetchUnlocalized(true);
         }
 
-        if (is_numeric($id)) {
+        if (is_numeric($id) || $id == NULL) {
             $query->addCondition('{id} = %1%', $id);
         } elseif (is_string($id)) {
             $query->addCondition('{slug} = %1%', $id);
@@ -52,15 +52,20 @@ class AssetFolderModel extends GenericModel {
         }
 
         $folder = $query->queryFirst();
-
-        if (!$folder) {
+        if (!$folder && ($id == NULL || $id == 0)) {
+            $folder = $this->createEntry();
+            $folder->setId(0);
+            $folder->children = $this->getFolders(null, null, 1, $locale);
+            $folder->name = "Assets";
+        }
+        else if (!$folder) {
             throw new Exception('Could not find folder with id ' . $id);
         }
 
         if ($recursiveDepth != 0) {
             $folder->children = $this->getFolderTree($folder, null, $recursiveDepth, $locale, $fetchUnlocalized);
         }
-
+        $folder->assets = $assetModel->getAssetsForFolder($folder->getId(), $locale);
         return $folder;
     }
 

@@ -9,6 +9,8 @@ use ride\library\validation\exception\ValidationException;
 use ride\web\cms\form\AssetComponent;
 use ride\web\cms\form\EntryFolderComponent;
 use ride\library\media\MediaFactory;
+use ride\library\image\ImageFactory;
+use ride\library\system\file\FileSystem;
 
 use ride\web\base\controller\AbstractController;
 
@@ -32,53 +34,24 @@ class AssetController extends AbstractController {
             }
         }
 
-        $translator = $this->getTranslator();
         $assetFolderModel = $orm->getAssetFolderModel();
         $assetModel = $orm->getAssetModel();
 
-        $data = array(
-            'folder' => $folder,
-        );
-
-        $form = $this->createFormBuilder($data);
-
-        $form->setRequest($this->request);
-
-        $form = $form->build();
-        if ($form->isSubmitted()) {
-            $data = $form->getData();
-
-            $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $data['folder']));
-
-            $this->response->setRedirect($url);
-
+        $breadcrumbs = array();
+        $folder = $assetFolderModel->getFolder($assetModel, $folder, 2, $locale);
+        if (!$folder) {
+            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
             return;
         }
-        $breadcrumbs = array();
-        if ($folder) {
-            $folder = $assetFolderModel->getFolder($folder, 2, $locale);
-            if (!$folder) {
-                $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
-                return;
-            }
-
-            $folder->assets = $assetModel->getAssetsForFolder($folder->id, $locale);
+        if ($folder->getId() > 0) {
             $breadcrumbs = $assetFolderModel->getBreadcrumbs($folder);
-        } else {
-
-            $folder = $assetFolderModel->createEntry();
-            $folder->id = 0;
-            $folder->children = $assetFolderModel->getFolders(null, null, 1, $locale);
-            $folder->assets = $assetModel->getAssetsForFolder(null, $locale);
-            $folder->name = "Assets";
         }
         foreach ($folder->children as $child) {
             $child->assets = $assetModel->getAssetsForFolder($child->id, $locale);
         }
 
         $this->setTemplateView('cms/backend/assets.overview', array(
-            'form' => $form->getView(),
             'folder' => $folder,
             'breadcrumbs' => $breadcrumbs,
             'locales' => $i18n->getLocaleCodeList(),
@@ -220,16 +193,23 @@ class AssetController extends AbstractController {
         ));
     }
 
-    public function assetAction(OrmManager $orm, AssetComponent $assetComponent, MediaFactory $mediaFactory, $locale, $item = null) {
+    public function assetAction(OrmManager $orm, AssetComponent $assetComponent, MediaFactory $mediaFactory, ImageFactory $imageFactory,
+                                FileSystem $fileSystem, $locale, $item = null) {
         $assetFolderModel = $orm->getAssetFolderModel();
         $assetModel = $orm->getAssetModel();
-
+        $dimension = NULL;
         if ($item) {
             $asset = $assetModel->getById($item);
             if (!$asset) {
                 $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-
                 return;
+            }
+            if (!$asset->isUrl) {
+                $path = $asset->getImage();
+                $file = $fileSystem->getFile($path);
+                $image = $imageFactory->createImage();
+                $image->read($file);
+                $dimension = $image->getDimension();
             }
         } else {
             $asset = $assetModel->createEntry();
@@ -247,7 +227,6 @@ class AssetController extends AbstractController {
                 $url = $this->getUrl('assets.overview.folder', array('locale' => $locale, 'folder' => $asset->folder->id));
 
                 $this->response->setRedirect($url);
-
                 return;
             }
 
@@ -269,12 +248,17 @@ class AssetController extends AbstractController {
             }
         }
 
+        $referer = $this->getUrl('assets.overview', array('locale' => $locale));
+        if ($asset && $folder = $asset->getFolder()) {
+            $referer = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $folder->getId()));
+        }
         $view = $this->setTemplateView('cms/backend/asset', array(
             'form' => $form->getView(),
             'asset' => $asset,
             'locale' => $locale,
-            'referer' => $this->request->getQueryParameter('referer'),
+            'referer' => $referer,
             'media' => $media,
+            'dimension' => $dimension,
         ));
 
         $view->addJavascript('js/cms/assets.js');
@@ -283,17 +267,17 @@ class AssetController extends AbstractController {
     public function assetDeleteAction(OrmManager $orm, $locale, $item) {
         $assetModel = $orm->getassetModel();
 
-        $item = $assetModel->getById($item);
-        if (!$item) {
+        $asset = $assetModel->getById($item);
+        if (!$asset) {
             $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
 
             return;
         }
-
         if ($this->request->isPost()) {
-            $assetModel->delete($item);
-
-            $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $item->folder->id));
+            $assetModel->delete($asset);
+            k($asset);
+            $folder_id = isset($asset->folder->id) ? $asset->folder->id : 0;
+            $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $folder_id));
 
             $this->response->setRedirect($url);
 
@@ -301,9 +285,8 @@ class AssetController extends AbstractController {
         }
 
         $this->setTemplateView('cms/backend/asset.delete', array(
-            'name' => $item->name,
+            'name' => $asset->name,
             'referer' => $this->request->getQueryParameter('referer'),
         ));
     }
-
 }

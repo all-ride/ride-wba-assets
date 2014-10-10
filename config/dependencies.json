@@ -22,6 +22,14 @@
 								"key": "assets.folder",
 								"default": "%public%/data/upload/assets"
 							}
+						},
+						{
+							"name": "transformation",
+							"type": "dependency",
+							"properties": {
+								"interface": "ride\\library\\image\\transformation\\Transformation",
+								"id": "crop"
+							}
 						}
 					]
                 }

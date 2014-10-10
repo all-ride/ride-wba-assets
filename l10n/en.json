@@ -1,6 +1,7 @@
 {
     "button.add.folder": "Add a new folder",
     "button.add.asset": "Add a new asset item",
+	"button.asset.delete": "Delete",
 	"title.asset.add": "New asset",
     "label.folder.current": "Current folder",
     "label.folder.info": "%folders% subfolders, %items% items",
@@ -12,6 +13,11 @@
     "label.assets": "Assets",
     "label.parent": "Parent",
     "label.thumbnail": "Thumbnail",
+	"label.asset.value": "Value",
+	"label.asset.type": "Type",
+	"label.asset.source": "Source",
+	"label.asset.created": "Date created",
+	"label.asset.modified": "Date changed",
     "title.folders": "Folders",
     "title.assets": "Assets Library",
 	"title.asset": "Asset"
