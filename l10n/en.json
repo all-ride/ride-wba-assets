@@ -18,6 +18,7 @@
 	"label.asset.source": "Source",
 	"label.asset.created": "Date created",
 	"label.asset.modified": "Date changed",
+	"label.asset.dimension": "Dimensions",
     "title.folders": "Folders",
     "title.assets": "Assets Library",
 	"title.asset": "Asset"

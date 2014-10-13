@@ -3,9 +3,7 @@
 {block name="content_title" append}
     <div class="page-header">
         {if $asset->id}
-            <h1>{$asset->name}
-                <small>{translate key="title.asset.edit"}</small>
-            </h1>
+            <h1>{$asset->name}</h1>
         {else}
             <h1>{translate key="title.asset.add"}</h1>
         {/if}
@@ -47,7 +45,9 @@
                             {if $referer}
                                 <a href="{$referer}" class="btn">{translate key="button.cancel"}</a>
                             {/if}
+                            {if $asset->getId()}
                                 <a href="{url id="asset.delete" parameters=["locale" => $locale, "item" => $asset->getId()]}">{translate key="button.asset.delete"}</a>
+                            {/if}
                         </div>
                     </div>
                 </fieldset>
