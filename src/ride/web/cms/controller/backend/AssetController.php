@@ -38,7 +38,7 @@ class AssetController extends AbstractController {
         $assetModel = $orm->getAssetModel();
 
         $breadcrumbs = array();
-        $folder = $assetFolderModel->getFolder($assetModel, $folder, 2, $locale);
+        $folder = $assetFolderModel->getFolder($folder, 2, $locale);
         if (!$folder) {
             $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
             return;

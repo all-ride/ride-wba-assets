@@ -36,7 +36,7 @@ class AssetFolderModel extends GenericModel {
      * @param string $locale code of the locale
      * @return Folder
      */
-    public function getFolder(AssetModel $assetModel, $id, $recursiveDepth = 1, $locale = null, $fetchUnlocalized = null) {
+    public function getFolder($id, $recursiveDepth = 1, $locale = null, $fetchUnlocalized = null) {
         $query = $this->createQuery($locale);
         $query->setRecursiveDepth(0);
         if ($fetchUnlocalized) {
@@ -65,6 +65,8 @@ class AssetFolderModel extends GenericModel {
         if ($recursiveDepth != 0) {
             $folder->children = $this->getFolderTree($folder, null, $recursiveDepth, $locale, $fetchUnlocalized);
         }
+
+        $assetModel = $this->orm->getAssetModel();
         $folder->assets = $assetModel->getAssetsForFolder($folder->getId(), $locale);
         return $folder;
     }
@@ -397,6 +399,7 @@ class AssetFolderModel extends GenericModel {
         $folders[$folder->getId()] = $folder->getName();
 
         while ($folder->getParentFolderId() != NULL) {
+            k($folder);
             $folder = $this->getFolder($folder->getParentFolderId());
             $folders[$folder->getId()] = $folder->getName();
         }

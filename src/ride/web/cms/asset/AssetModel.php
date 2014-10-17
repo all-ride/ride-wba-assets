@@ -4,6 +4,7 @@ namespace ride\web\cms\asset;
 
 use ride\library\orm\model\GenericModel;
 
+
 /**
  * Model for the asset items
  */
