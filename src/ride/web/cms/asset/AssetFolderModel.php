@@ -4,7 +4,6 @@ namespace ride\web\cms\asset;
 
 use ride\library\orm\model\GenericModel;
 use ride\library\orm\query\ModelQuery;
-use ride\library\vwidation\exception\ValidationException;
 use ride\library\validation\ValidationError;
 
 use \Exception;

@@ -28,4 +28,7 @@ class AssetEntry extends OrmAssetEntry {
         return null;
     }
 
+    public function getUser() {
+        k($this->getOwner());
+    }
 }

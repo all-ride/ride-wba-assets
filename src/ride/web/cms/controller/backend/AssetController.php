@@ -51,12 +51,60 @@ class AssetController extends AbstractController {
             $child->assets = $assetModel->getAssetsForFolder($child->id, $locale);
         }
 
-        $this->setTemplateView('cms/backend/assets.overview', array(
+        //create the bulk selection/edit form
+        $translator = $this->getTranslator();
+        $builder = $this->createFormBuilder();
+        $types = $assetModel->getAssetTypes();
+        array_unshift($types, 'all');
+
+        $builder->addRow('style', 'option', array(
+            'label' => '',
+            'default' => 'grid',
+            'options' => array(
+                'grid' => 'grid',
+                'list' => 'list',
+            ),
+        ));
+
+        $builder->addRow('source', 'select', array(
+            'label' => '',
+            'default' => 'all',
+            'options' => $types,
+        ));
+
+        $builder->addRow('uploaded', 'select', array(
+            'label' =>  '',
+            'default' => 'all',
+            'options' => array(
+                'all' => "Don't filter on date",
+                'today' => 'Today',
+                'last_week' => 'Last week',
+                'last_month' => 'Last month',
+                'last_year' => 'Last year',
+            ),
+        ));
+
+        $bulkSelectForm = $builder->build();
+        $bulkSelectForm->setId('asset-overview-bulk');
+
+        // handle form
+        if ($bulkSelectForm->isSubmitted()) {
+            try{
+                $bulkSelectForm->validate();
+            }
+            catch (ValidationException $e) {
+
+            }
+        }
+        $view = $this->setTemplateView('cms/backend/assets.overview', array(
+            'bulkSelectForm' => $bulkSelectForm->getView(),
             'folder' => $folder,
             'breadcrumbs' => $breadcrumbs,
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
         ));
+
+        $view->addJavascript('js/assets-frontend.js');
     }
 
     public function sortAction(OrmManager $orm, $locale, $folder = null) {
@@ -220,7 +268,7 @@ class AssetController extends AbstractController {
         $media = $asset->isUrl ? $mediaFactory->createMediaItem($asset->value) : NULL;
 
         $form = $this->buildForm($assetComponent, $asset);
-        $form->setId('asset-form');
+        $form->setId('asset-edit-form');
 
         if ($form->isSubmitted()) {
             if ($this->request->getBodyParameter('cancel')) {
@@ -261,7 +309,7 @@ class AssetController extends AbstractController {
             'dimension' => $dimension,
         ));
 
-        $view->addJavascript('js/cms/assets.js');
+        $view->addJavascript('js/cms/assets-backend.js');
     }
 
     public function assetDeleteAction(OrmManager $orm, $locale, $item) {
@@ -275,7 +323,6 @@ class AssetController extends AbstractController {
         }
         if ($this->request->isPost()) {
             $assetModel->delete($asset);
-            k($asset);
             $folder_id = isset($asset->folder->id) ? $asset->folder->id : 0;
             $url = $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $folder_id));
 

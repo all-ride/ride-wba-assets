@@ -28,4 +28,18 @@ class AssetModel extends GenericModel {
         $query->addOrderBy('{orderIndex} ASC');
         return $query->query();
     }
+
+    public function getAssetsForUser($userId, $locale = null) {
+        $orm = $this->getOrmManager();
+        k($this->find($options = array('filter' => array('user' => 'admin'))));
+        //TODO : ASK KAYA
+    }
+
+    public function getAssetTypes() {
+        $query = $this->createQuery();
+        $query->setFields('{type}');
+        $query->setDistinct(TRUE);
+        $result = $query->query('type');
+        return array_keys($result);
+    }
 }

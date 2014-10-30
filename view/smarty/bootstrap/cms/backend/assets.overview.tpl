@@ -6,13 +6,6 @@
     {url id="assets.folder.overview" parameters=["locale" => "%locale%", "folder" => $folder->id] var="url"}
     {call taskbarPanelLocales url=$url locale=$locale locales=$locales}
 {/block}
-
-{block name="content_title" append}
-    <div class="page-header">
-        <h1>{translate key="title.assets"}</h1>
-    </div>
-{/block}
-
 {block name="content_body" append}
     <div class="breadcrumbs">
         <ol class="breadcrumb">
@@ -27,6 +20,7 @@
         </ol>
     </div>
     {include file="base/form.prototype"}
+
     <div class="folder-top">
         <div class="btn-group asset-actions">
             <a href="{url id="assets.folder.add" parameters=["locale" => $locale]}?folder={$folder->id}"
@@ -38,6 +32,14 @@
             <div class="description">{$folder->description}</div>
         {/if}
     </div>
+
+    <div class="bulk_select_form row">
+        <form id="{$bulkSelectForm->getId()}" class="form-horizontal" action="{$app.url.request}" method="POST" role="form"
+          enctype="multipart/form-data">
+            {call formRows form=$bulkSelectForm rowClass="col-md-3"}
+        </form>
+    </div>
+
     <div class="row">
         {if $folder->children}
             {foreach $folder->children as $child}
@@ -53,19 +55,39 @@
             {/foreach}
         {/if}
         {if $folder->assets}
+            <div class="col-md-12 list_header bg-primary">
+                <div class="col-md-2">
+                    <span class="header">Preview</span>
+                    <input type="checkbox" name="select-all" />
+                </div>
+                <div class="col-md-6">Name</div>
+                <div class="col-md-2">Author</div>
+                <div class="col-md-2">Date</div>
+            </div>
             {foreach $folder->assets as $asset}
-                <div class="col-md-2 asset-handle assets-{$asset->type}">
-                    <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}">
-                        {if $asset->thumbnail}
-                            <div class="image">
-                                <img src="{image src=$asset->thumbnail width=150 height=150 transformation="crop"}"/>
-                            </div>
-                        {elseif $asset->type == 'image'}
-                            <div class="image">
-                                <img src="{image src=$asset->thumbnail width=125 height=125 transformation="crop"}"/>
-                            </div>
-                        {/if}
-                    </a>
+                <div class="col-md-12 asset-handle assets-{$asset->type}">
+                    <div class="col-md-2">
+                        <a href="{url id="asset.edit" parameters=["locale" => $locale, "item" => $asset->id]}">
+                            {if $asset->thumbnail}
+                                <div class="image">
+                                    <img src="{image src=$asset->thumbnail width=150 height=150 transformation="crop"}"/>
+                                </div>
+                            {elseif $asset->type == 'image'}
+                                <div class="image">
+                                    <img src="{image src=$asset->thumbnail width=125 height=125 transformation="crop"}"/>
+                                </div>
+                            {/if}
+                        </a>
+                    </div>
+                    <div class="asset_details">
+                                <div class="col-md-6">
+                                    {$asset->name}
+                                    <strong>{$asset->type}</strong>
+                                </div>
+                                <div class="col-md-2">{$asset->getOwner()->getName()}</div>
+                                <div class="col-md-2">{$asset->dateModified|date_format : "%d-%m-%Y %T"}</div>
+                    </div>
+                    <input type="checkbox" name="selected-asset" value="{$asset->id}"/>
                 </div>
             {/foreach}
         {/if}
