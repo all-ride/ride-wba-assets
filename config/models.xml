@@ -40,6 +40,7 @@
         <option name="behaviour.slug" value="name" />
         <option name="behaviour.owner" value="true" />
         <option name="behaviour.version" value="true" />
+        <option name="scaffold.expose" value="1"/>
     </model>
     <model name="AssetFolder" modelClass="ride\web\cms\asset\AssetFolderModel" entryClass="ride\web\cms\asset\AssetFolderEntry">
         <field name="parent" type="string">

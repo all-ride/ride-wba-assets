@@ -37,6 +37,7 @@
         <form id="{$bulkSelectForm->getId()}" class="form-horizontal" action="{$app.url.request}" method="POST" role="form"
           enctype="multipart/form-data">
             {call formRows form=$bulkSelectForm rowClass="col-md-3"}
+            <input type="submit" class="btn btn-default" value="{translate key="button.filter"}"/>
         </form>
     </div>
 
@@ -58,9 +59,11 @@
             <div class="col-md-12 list_header bg-primary">
                 <div class="col-md-2">
                     <span class="header">Preview</span>
-                    <input type="checkbox" name="select-all" />
                 </div>
-                <div class="col-md-6">Name</div>
+                <div class="col-md-6">
+                    <input type="checkbox" name="select-all" />
+                    Name
+                </div>
                 <div class="col-md-2">Author</div>
                 <div class="col-md-2">Date</div>
             </div>
@@ -80,12 +83,12 @@
                         </a>
                     </div>
                     <div class="asset_details">
-                                <div class="col-md-6">
-                                    {$asset->name}
-                                    <strong>{$asset->type}</strong>
-                                </div>
-                                <div class="col-md-2">{$asset->getOwner()->getName()}</div>
-                                <div class="col-md-2">{$asset->dateModified|date_format : "%d-%m-%Y %T"}</div>
+                        <div class="col-md-6">
+                            {$asset->name}
+                            <strong>{$asset->type}</strong>
+                        </div>
+                        <div class="col-md-2">{$asset->getOwner()}</div>
+                        <div class="col-md-2">{$asset->dateModified|date_format : "%d-%m-%Y %T"}</div>
                     </div>
                     <input type="checkbox" name="selected-asset" value="{$asset->id}"/>
                 </div>
