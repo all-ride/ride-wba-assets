@@ -1,6 +1,6 @@
 <?php
 
-namespace ride\web\cms\asset;
+namespace ride\web\base\asset;
 
 use ride\application\orm\entry\AssetFolderEntry as OrmAssetFolderEntry;
 
@@ -20,7 +20,15 @@ class AssetFolderEntry extends OrmAssetFolderEntry {
      * @return string
      */
     public function __toString() {
-        return $this->getPath() . ': ' . $this->name;
+        return $this->getPath() . ': ' . $this->getName();
+    }
+
+    /**
+     * Gets the type of this entry
+     * @return string
+     */
+    public function getType() {
+        return 'folder';
     }
 
     /**
@@ -28,11 +36,11 @@ class AssetFolderEntry extends OrmAssetFolderEntry {
      * @return string
      */
     public function getPath() {
-        if (!$this->parent) {
+        if (!$this->getParent()) {
             return $this->id;
         }
 
-        return $this->parent . AssetFolderModel::PATH_SEPARATOR . $this->id;
+        return $this->getParent() . AssetFolderModel::PATH_SEPARATOR . $this->getId();
     }
 
     /**
@@ -40,11 +48,11 @@ class AssetFolderEntry extends OrmAssetFolderEntry {
      * @return integer
      */
     public function getRootFolderId() {
-        if (!$this->parent) {
-            return $this->id;
+        if (!$this->getParent()) {
+            return $this->getId();
         }
 
-        $tokens = explode(AssetFolderModel::PATH_SEPARATOR, $this->parent);
+        $tokens = explode(AssetFolderModel::PATH_SEPARATOR, $this->getParent());
 
         return array_shift($tokens);
     }
@@ -54,11 +62,11 @@ class AssetFolderEntry extends OrmAssetFolderEntry {
      * @return integer
      */
     public function getParentFolderId() {
-        if (!$this->parent) {
+        if (!$this->getParent()) {
             return null;
         }
 
-        $ids = explode(AssetFolderModel::PATH_SEPARATOR, $this->parent);
+        $ids = explode(AssetFolderModel::PATH_SEPARATOR, $this->getParent());
 
         return array_pop($ids);
     }
@@ -71,7 +79,7 @@ class AssetFolderEntry extends OrmAssetFolderEntry {
     public function hasParentFolder(AssetFolderEntry $folder) {
         $ids = explode(AssetFolderModel::PATH_SEPARATOR, $this->parent);
 
-        return in_array($folder->id, $ids);
+        return in_array($folder->getId(), $ids);
     }
 
     /**
@@ -79,11 +87,11 @@ class AssetFolderEntry extends OrmAssetFolderEntry {
      * @return integer
      */
     public function getLevel() {
-        if (!$this->parent) {
+        if (!$this->getParent()) {
             return 0;
         }
 
-        return substr_count($this->parent, AssetFolderModel::PATH_SEPARATOR) + 1;
+        return substr_count($this->getParent(), AssetFolderModel::PATH_SEPARATOR) + 1;
     }
 
 }

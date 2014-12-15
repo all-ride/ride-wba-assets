@@ -1,5 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <models>
+    <model name="Asset" modelClass="ride\web\base\asset\AssetModel" entryClass="ride\web\base\asset\AssetEntry">
+        <field name="folder" model="AssetFolder" relation="belongsTo">
+        </field>
+        <field name="orderIndex" type="integer" />
+        <field name="name" type="string" localized="true">
+            <option name="label.name" value="label.name" />
+        </field>
+        <field name="description" type="wysiwyg" localized="true">
+            <option name="label.name" value="label.description" />
+        </field>
+        <field name="thumbnail" type="image" />
+        <field name="type" type="string" />
+        <field name="source" type="string" />
+        <field name="value" type="string" />
+        <field name="meta" model="AssetMeta" relation="hasMany" />
+        <field name="slug" type="string" localized="true" />
+
+        <format name="title">{name}</format>
+        <format name="teaser">{type}: {value}</format>
+        <format name="image">{thumbnail}</format>
+
+        <option name="behaviour.date" value="true" />
+        <option name="behaviour.log" value="true" />
+        <option name="behaviour.slug" value="name" />
+        <option name="behaviour.owner" value="true" />
+        <option name="behaviour.version" value="true" />
+    </model>
+    <model name="AssetFolder" modelClass="ride\web\base\asset\AssetFolderModel" entryClass="ride\web\base\asset\AssetFolderEntry">
+        <field name="parent" type="string">
+            <option name="label.name" value="label.parent" />
+        </field>
+        <field name="orderIndex" type="integer" />
+        <field name="name" type="string" localized="true">
+            <option name="label.name" value="label.name" />
+            <validation name="required" />
+        </field>>
+        <field name="description" type="wysiwyg" localized="true">
+            <option name="label.name" value="label.description" />
+        </field>
+        <field name="slug" type="string" localized="true" />
+
+        <format name="title">{name}</format>
+
+        <option name="behaviour.date" value="true" />
+        <option name="behaviour.log" value="true" />
+        <option name="behaviour.slug" value="name" />
+        <option name="behaviour.version" value="true" />
+    </model>
     <model name="AssetMeta">
         <field name="asset" model="Asset" relation="belongsTo">
             <validation name="required" />
@@ -13,54 +61,5 @@
         <format name="teaser">{asset.name}</format>
 
         <option name="behaviour.log" value="true" />
-    </model>
-    <model name="Asset" modelClass="ride\web\cms\asset\AssetModel" entryClass="ride\web\cms\asset\AssetEntry">
-        <field name="folder" model="AssetFolder" relation="belongsTo">
-            <validation name="required" />
-        </field>
-        <field name="orderIndex" type="integer" />
-        <field name="name" type="string" localized="true">
-            <option name="label.name" value="label.name" />
-
-            <validation name="required" />
-        </field>
-        <field name="description" type="wysiwyg" localized="true">
-            <option name="label.name" value="label.description" />
-        </field>
-        <field name="thumbnail" type="image" />
-        <field name="type" type="string" />
-        <field name="value" type="string" />
-        <field name="meta" model="AssetMeta" relation="hasMany" />
-        <field name="slug" type="string" localized="true" />
-
-        <format name="title">{name}</format>
-        <format name="teaser">{type}: {value}</format>
-
-        <option name="behaviour.date" value="true" />
-        <option name="behaviour.log" value="true" />
-        <option name="behaviour.slug" value="name" />
-        <option name="behaviour.version" value="true" />
-    </model>
-    <model name="AssetFolder" modelClass="ride\web\cms\asset\AssetFolderModel" entryClass="ride\web\cms\asset\AssetFolderEntry">
-        <field name="parent" type="string">
-            <option name="label.name" value="label.parent" />
-        </field>
-        <field name="orderIndex" type="integer" />
-        <field name="name" type="string" localized="true">
-            <option name="label.name" value="label.name" />
-            <validation name="required" />
-        </field>>
-        <field name="description" type="wysiwyg" localized="true">
-            <option name="label.name" value="label.description" />
-        </field>
-        <field name="asset" model="Asset" relation="hasMany" />
-        <field name="slug" type="string" localized="true" />
-
-        <format name="title">{name}</format>
-
-        <option name="behaviour.date" value="true" />
-        <option name="behaviour.log" value="true" />
-        <option name="behaviour.slug" value="name" />
-        <option name="behaviour.version" value="true" />
     </model>
 </models>
