@@ -1,8 +1,0 @@
-{
-    "cms.menu.content": [
-        {
-            "interface": "ride\\web\\cms\\AssetApplicationListener",
-            "method": "prepareContentMenu"
-        }
-    ]
-}

@@ -1,39 +1,47 @@
 {
     "dependencies": [
         {
-            "class": "ride\\web\\cms\\form\\AssetComponent",
-            "id": "asset.component",
+            "class": "ride\\library\\system\\file\\File",
+            "id": "assets",
             "calls": [
                 {
                     "method": "__construct",
                     "arguments": [
                         {
-                            "name": "thumbnailFolder",
+                            "name": "path",
                             "type": "parameter",
                             "properties": {
-                                "key": "thumbnail.folder",
-                                "default": "data/upload/assets/thumbnails"
+                                "key": "system.directory.assets"
                             }
-                        },
-						{
-							"name": "assetFolder",
-							"type": "parameter",
-							"properties": {
-								"key": "assets.folder",
-								"default": "%public%/data/upload/assets"
-							}
-						},
-						{
-							"name": "transformation",
-							"type": "dependency",
-							"properties": {
-								"interface": "ride\\library\\image\\transformation\\Transformation",
-								"id": "crop"
-							}
-						}
-					]
+                        }
+                    ]
                 }
             ]
+        },
+        {
+            "interfaces": ["ride\\library\\form\\component\\Component", "ride\\web\\base\\form\\AssetComponent"],
+            "class": "ride\\web\\base\\form\\AssetComponent",
+            "id": "asset",
+            "calls": [
+                {
+                    "method": "__construct",
+                    "arguments": [
+                        {
+                            "name": "directory",
+                            "type": "dependency",
+                            "properties": {
+                                "interface": "ride\\library\\system\\file\\File",
+                                "id": "assets"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "interfaces": ["ride\\library\\form\\component\\Component", "ride\\web\\base\\form\\AssetSelectComponent"],
+            "class": "ride\\web\\base\\form\\AssetSelectComponent",
+            "id": "asset.select"
         }
     ]
 }

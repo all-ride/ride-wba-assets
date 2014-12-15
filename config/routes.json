@@ -1,67 +1,80 @@
 {
     "routes": [
         {
-            "path": "/content/assets",
-            "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
+            "path": "/assets/%asset%",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "assetValueAction",
+            "id": "assets.value"
+        },
+        {
+            "path": "/admin/assets",
+            "controller": "ride\\web\\base\\controller\\AssetController",
             "action": "indexAction",
             "id": "assets.overview"
         },
         {
-            "path": "/content/assets/%locale%/folder",
-            "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
+            "path": "/admin/assets/%locale%",
+            "controller": "ride\\web\\base\\controller\\AssetController",
             "action": "indexAction",
             "id": "assets.overview.locale"
         },
         {
-            "path": "/content/assets/%locale%/folder/%folder%",
-            "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
+            "path": "/admin/assets/%locale%/folders/%folder%",
+            "controller": "ride\\web\\base\\controller\\AssetController",
             "action": "indexAction",
             "id": "assets.folder.overview"
         },
         {
-            "path": "/content/assets/%locale%/folder/%folder%/sort",
-            "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
-            "action": "sortAction",
-            "id": "assets.folder.sort",
+            "path": "/admin/assets/%locale%/folders/%folder%/bulk",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "folderBulkAction",
+            "id": "assets.folder.bulk",
             "methods": "post"
         },
         {
-            "path": "/content/assets/%locale%/folder/%folder%/edit",
-            "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
-            "action": "folderAction",
+            "path": "/admin/assets/%locale%/folders/add",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "folderFormAction",
+            "id": "assets.folder.add"
+        },
+        {
+            "path": "/admin/assets/%locale%/folders/%folder%/edit",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "folderFormAction",
             "id": "assets.folder.edit",
             "methods": ["head", "get", "post"]
         },
         {
-            "path": "/content/assets/%locale%/folder/%folder%/delete",
-            "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
+            "path": "/admin/assets/%locale%/folders/%folder%/delete",
+            "controller": "ride\\web\\base\\controller\\AssetController",
             "action": "folderDeleteAction",
             "id": "assets.folder.delete"
         },
         {
-            "path": "/content/assets/%locale%/add/folder",
-            "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
-            "action": "folderAction",
-            "id": "assets.folder.add"
+            "path": "/admin/assets/%locale%/folders/%folder%/sort",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "folderSortAction",
+            "id": "assets.sort",
+            "methods": "post"
         },
         {
-            "path": "/content/assets/%locale%/asset/%item%/edit/",
-            "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
-            "action": "assetAction",
-            "id": "asset.edit",
+            "path": "/admin/assets/%locale%/items/add",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "assetFormAction",
+            "id": "assets.asset.add"
+        },
+        {
+            "path": "/admin/assets/%locale%/items/%asset%/edit/",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "assetFormAction",
+            "id": "assets.asset.edit",
             "methods": ["head", "get", "post"]
         },
         {
-            "path": "/content/assets/%locale%/asset/%item%/delete",
-            "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
-            "action": "AssetDeleteAction",
-            "id": "asset.delete"
-        },
-        {
-            "path": "/content/assets/%locale%/add/item",
-            "controller": "ride\\web\\cms\\controller\\backend\\AssetController",
-            "action": "assetAction",
-            "id": "asset.add"
+            "path": "/admin/assets/%locale%/items/%asset%/delete",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "assetDeleteAction",
+            "id": "assets.asset.delete"
         }
     ]
 }
