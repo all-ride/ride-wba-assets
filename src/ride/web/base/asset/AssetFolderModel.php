@@ -17,8 +17,12 @@ class AssetFolderModel extends GenericModel {
      */
     const PATH_SEPARATOR = '-';
 
-    public function getOptionList($locale = null) {
+    public function getOptionList($locale = null, $fetchUnlocalized = null) {
         $query = $this->createQuery($locale);
+        if ($fetchUnlocalized != null) {
+            $query->setFetchUnlocalized($fetchUnlocalized);
+        }
+
         $query->addOrderBy('{parent} ASC, {orderIndex} ASC');
 
         $folders = $query->query();

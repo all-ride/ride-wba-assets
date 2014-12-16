@@ -13,8 +13,28 @@ use ride\web\base\asset\AssetModel;
  */
 class AssetSelectComponent extends AbstractComponent {
 
+    /**
+     * Code of the locale
+     * @var string
+     */
+    protected $locale;
+
+    /**
+     * Constructs a new component
+     * @param \ride\library\orm\OrmManager $orm
+     * @return null
+     */
     public function __construct(OrmManager $orm) {
         $this->assetModel = $orm->getAssetModel();
+    }
+
+    /**
+     * Sets the locale for the asset query
+     * @param string $locale
+     * @return null
+     */
+    public function setLocale($locale) {
+        $this->locale = $locale;
     }
 
     /**
@@ -55,7 +75,7 @@ class AssetSelectComponent extends AbstractComponent {
 
         $builder->addRow('asset', 'object', array(
             'label' => $translator->translate('label.asset'),
-            'options' => $this->assetModel->find(),
+            'options' => $this->assetModel->find(null, $this->locale),
             'value' => 'id',
             'property' => 'name',
             'widget' => 'select',
