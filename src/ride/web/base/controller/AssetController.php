@@ -58,6 +58,7 @@ class AssetController extends AbstractController {
             'type' => $this->request->getQueryParameter('type', 'all'),
             'date' => $this->request->getQueryParameter('date', 'all'),
         );
+        $flatten = $this->request->getQueryParameter('flatten', 0);
 
         // create the filter form
         $translator = $this->getTranslator();
@@ -96,7 +97,7 @@ class AssetController extends AbstractController {
             } else {
                 $url = $this->getUrl('assets.overview.locale', array('locale' => $locale));
             }
-            $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']);
+            $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']) . '&flatten=' . $flatten;
 
             $this->response->setRedirect($url);
 
@@ -111,14 +112,17 @@ class AssetController extends AbstractController {
             return;
         }
 
+        $items = $folderModel->getItems($folder, $locale, true, $filter, $flatten);
+
         // assign everything to view
         $view = $this->setTemplateView('assets/overview', array(
             'form' => $form->getView(),
             'folder' => $folder,
-            'items' => $folderModel->getItems($folder, $locale, true, $filter),
+            'items' => $items,
             'breadcrumbs' => $folderModel->getBreadcrumbs($folder),
             'view' => $view,
             'filter' => $filter,
+            'flatten' => $flatten,
             'urlSuffix' => '?view=' . $view . '&type=' . $filter['type'] . '&date=' . $filter['date'],
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
