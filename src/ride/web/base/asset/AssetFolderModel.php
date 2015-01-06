@@ -97,6 +97,10 @@ class AssetFolderModel extends GenericModel {
             return array();
         }
 
+        if (!$parent->getId()) {
+            $parent = null;
+        }
+
         // fetch the subfolders
         $query = $this->createQuery($locale);
         $query->setFetchUnlocalized($includeUnlocalized);
@@ -200,24 +204,44 @@ class AssetFolderModel extends GenericModel {
      * @param string $locale Code of the locale
      * @param boolean $fetchUnlocalized
      * @param array $filter
-     * @return array Array with folders and assets order by their order index
+     * @param boolean $flatten Set to true to ignore folders and get all child
+     * assets
+     * @param array $items Current item result, needed for recursive calls
+     * @return array Array with folders and assets ordered by their order index.
+     * When flattening, array with all the child assets and uhm quite random...
      */
-    public function getItems(AssetFolderEntry $folder, $locale = null, $fetchUnlocalized = null, array $filter = null) {
-        $items = array();
+    public function getItems(AssetFolderEntry $folder, $locale = null, $fetchUnlocalized = null, array $filter = null, $flatten = false, array $items = array()) {
+        // get the folders
+        if ($flatten) {
+            $flattenFilter = $filter;
+            $flattenFilter['type'] = 'folder';
 
-        $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $filter);
-        foreach ($children as $child) {
-            $items[$child->getOrderIndex()] = $child;
+            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $flattenFilter);
+            foreach ($children as $child) {
+                $items = $this->getItems($child, $locale, $fetchUnlocalized, $filter, true, $items);
+            }
+        } else {
+            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $filter);
+            foreach ($children as $child) {
+                $items[$child->getOrderIndex()] = $child;
+            }
         }
 
+        // get the assets
         $assetModel = $this->orm->getAssetModel();
 
         $assets = $assetModel->getByFolder($folder->getId(), $locale, $fetchUnlocalized, $filter);
         foreach ($assets as $asset) {
-            $items[$asset->getOrderIndex()] = $asset;
+            if ($flatten) {
+                $items[$asset->getId()] = $asset;
+            } else {
+                $items[$asset->getOrderIndex()] = $asset;
+            }
         }
 
-        ksort($items);
+        if (!$flatten) {
+            ksort($items);
+        }
 
         return $items;
     }
@@ -325,7 +349,7 @@ class AssetFolderModel extends GenericModel {
             $folderQuery->addCondition('{parent} = %1%', $parent->getPath());
             $assetQuery->addCondition('{folder} = %1%', $parent->getId());
         } else {
-            $folderQuery->addCondition('{parent} = %1%', '0');
+            $folderQuery->addCondition('{parent} IS NULL OR {parent} = %1%', '0');
             $assetQuery->addCondition('{folder} IS NULL');
         }
 

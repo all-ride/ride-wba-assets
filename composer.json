@@ -2,7 +2,7 @@
     "name": "ride/wba-assets",
     "description": "Assets library for the Ride base application",
     "license": "MIT",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "authors": [
         {
             "name": "Ward Brems",
@@ -14,6 +14,7 @@
         }
     ],
     "require": {
+        "ride/app-media": ">=0.2.0",
         "ride/app-orm": ">=0.1.0",
         "ride/lib-form": ">=0.5.4",
         "ride/lib-http": ">=0.2.1",
