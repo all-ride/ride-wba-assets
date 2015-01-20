@@ -178,6 +178,7 @@ class AssetModel extends GenericModel {
         $media = $mediaFactory->createMediaItem($asset->getValue());
 
         $asset->setSource($media->getType());
+        $asset->setEmbedUrl($media->getEmbedUrl());
         if ($media->isVideo()) {
             $asset->setType(AssetEntry::TYPE_VIDEO);
         } elseif ($media->isAudio()) {
