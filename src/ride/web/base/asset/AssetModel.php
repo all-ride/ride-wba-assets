@@ -14,6 +14,28 @@ use ride\library\orm\model\GenericModel;
 class AssetModel extends GenericModel {
 
     /**
+     * Gets an entry list as a flat list
+     * @param string $locale Code of the locale
+     * @return array Array with the id of the entry as key and the title format
+     * as value
+     */
+    public function getEntryList($locale = null) {
+        $locale = $this->getLocale($locale);
+
+        if (isset($this->list[$locale])) {
+            return $this->list[$locale];
+        }
+
+        $query = $this->createFindQuery(null, $locale, true);
+        $query->setFields('{id}, {name}');
+        $entries = $query->query();
+
+        $this->list[$locale] = $this->getOptionsFromEntries($entries);
+
+        return $this->list[$locale];
+    }
+
+    /**
      * Gets the assets for a folder
      * @param string $folder Id of the folder
      * @param string $locale Code of the locale
@@ -227,8 +249,8 @@ class AssetModel extends GenericModel {
     }
 
     /**
-     * Gets the file browser
-     * @return \ride\library\system\file\browser\FileBrowser
+     * Gets the directory of the assets
+     * @return \ride\library\system\file\File
      */
     public function getDirectory() {
         return $this->orm->getDependencyInjector()->get('ride\\library\\system\\file\\File', 'assets');
