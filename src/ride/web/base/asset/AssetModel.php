@@ -26,11 +26,20 @@ class AssetModel extends GenericModel {
             return $this->list[$locale];
         }
 
-        $query = $this->createFindQuery(null, $locale, true);
-        $query->setFields('{id}, {name}');
-        $entries = $query->query();
+        $page = 1;
+        $limit = 1000;
+        $this->list[$locale] = array();
 
-        $this->list[$locale] = $this->getOptionsFromEntries($entries);
+        do {
+            $query = $this->createFindQuery(null, $locale, true);
+            $query->setFields('{id}, {name}');
+            $query->setLimit($limit, ($page - 1) * $limit);
+            $entries = $query->query();
+
+            $this->list[$locale] += $this->getOptionsFromEntries($entries);
+
+            $page++;
+        } while (count($entries) == $limit);
 
         return $this->list[$locale];
     }
