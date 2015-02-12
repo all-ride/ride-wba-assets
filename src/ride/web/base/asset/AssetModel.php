@@ -50,7 +50,34 @@ class AssetModel extends GenericModel {
      * @param string $locale Code of the locale
      * @return array
      */
-    public function getByFolder($folder, $locale = null, $fetchUnlocalized = null, array $filter = null) {
+    public function getByFolder($folder, $locale = null, $fetchUnlocalized = null, array $filter = null, $limit = 0, $page = 1) {
+        $query = $this->createByFolderQuery($folder, $locale, $fetchUnlocalized, $filter);
+        if ($limit) {
+            $query->setLimit($limit, ($page - 1) * $limit);
+        }
+
+        return $query->query();
+    }
+
+    /**
+     * Gets the assets for a folder
+     * @param string $folder Id of the folder
+     * @param string $locale Code of the locale
+     * @return array
+     */
+    public function countByFolder($folder, $locale = null, $fetchUnlocalized = null, array $filter = null) {
+        $query = $this->createByFolderQuery($folder, $locale, $fetchUnlocalized, $filter);
+
+        return $query->count();
+    }
+
+    /**
+     * Gets the assets for a folder
+     * @param string $folder Id of the folder
+     * @param string $locale Code of the locale
+     * @return array
+     */
+    protected function createByFolderQuery($folder, $locale = null, $fetchUnlocalized = null, array $filter = null) {
         $query = $this->createQuery($locale);
         $query->setFetchUnlocalized($fetchUnlocalized);
         $query->addOrderBy('{orderIndex} ASC');
@@ -90,7 +117,7 @@ class AssetModel extends GenericModel {
             $query->addCondition('%1% <= {dateAdded} AND {dateAdded} <= %2%', $from, $till);
         }
 
-        return $query->query();
+        return $query;
     }
 
     /**

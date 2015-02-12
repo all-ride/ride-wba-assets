@@ -83,7 +83,7 @@ class AssetFolderModel extends GenericModel {
     }
 
     /**
-     * Get the nodes with their nested children for a parent node
+     * Get the folders with their nested children for a parent node
      * @param AssetFolderEntry $parent
      * @param string $locale
      * @param boolean $includeUnlocalized
@@ -92,12 +92,98 @@ class AssetFolderModel extends GenericModel {
      * @return array Array with the folder id as key and the Folder instance
      * with requested children as value
      */
-    public function getFolders(AssetFolderEntry $parent = null, $locale = null, $includeUnlocalized = null, array $filter = null, $maxDepth = 1, $excludes = null) {
+    public function getFolders(AssetFolderEntry $parent = null, $locale = null, $includeUnlocalized = null, array $filter = null, $limit = 0, $page = 1, $maxDepth = 1, $excludes = null) {
         if (isset($filter['type']) && $filter['type'] != 'all' && $filter['type'] != 'folder') {
             return array();
         }
 
-        if (!$parent->getId()) {
+        $query = $this->createFoldersQuery($parent, $locale, $includeUnlocalized, $filter, $maxDepth, $excludes);
+
+        if ($limit) {
+            $query->setLimit($limit, ($page - 1) * $limit);
+        }
+
+        $query->addOrderBy('{parent} ASC, {orderIndex} ASC');
+        $folders = $query->query();
+
+        // order folders by path
+        $foldersByParent = array();
+        foreach ($folders as $folder) {
+            $folderParent = $folder->getParent();
+            if (!$folderParent) {
+                $folderParent = 0;
+            }
+
+            if (!array_key_exists($folderParent, $foldersByParent)) {
+                $foldersByParent[$folderParent] = array();
+            }
+
+            $foldersByParent[$folderParent][$folder->getId()] = $folder;
+        }
+
+        $path = null;
+        if ($parent && $parent->getId())  {
+            $path = $parent->getPath();
+        }
+
+        // restore the tree hierrarchy of the folders
+        $folders = array();
+        foreach ($foldersByParent as $folderPath => $pathFolders) {
+            if ($path) {
+                $folders = $pathFolders;
+            }
+
+            foreach ($pathFolders as $pathFolder) {
+                $pathFolderPath = $pathFolder->getPath();
+                if (!array_key_exists($pathFolderPath, $foldersByParent)) {
+                    continue;
+                }
+
+                $pathFolder->children = $foldersByParent[$pathFolderPath];
+
+                unset($foldersByParent[$pathFolderPath]);
+            }
+        }
+
+        if ($parent) {
+            return $folders;
+        } elseif ($foldersByParent) {
+            return $foldersByParent[0];
+        } else {
+            return array();
+        }
+    }
+
+    /**
+     * Counts the folders for a parent node
+     * @param AssetFolderEntry $parent
+     * @param string $locale
+     * @param boolean $includeUnlocalized
+     * @param integer $maxDepth
+     * @param string|array $excludes
+     * @return integer Number of folders
+     */
+    public function countFolders(AssetFolderEntry $parent = null, $locale = null, $includeUnlocalized = null, array $filter = null, $limit = 0, $page = 1, $maxDepth = 1, $excludes = null) {
+        if (isset($filter['type']) && $filter['type'] != 'all' && $filter['type'] != 'folder') {
+            return 0;
+        }
+
+        $query = $this->createFoldersQuery($parent, $locale, $includeUnlocalized, $filter, $maxDepth, $excludes);
+
+        return $query->count();
+    }
+
+    /**
+     * Creates a query to get or count the folders for a parent node
+     * @param AssetFolderEntry $parent
+     * @param string $locale
+     * @param boolean $includeUnlocalized
+     * @param integer $maxDepth
+     * @param string|array $excludes
+     * @return \ride\library\orm\query\ModelQuery
+     */
+    protected function createFoldersQuery(AssetFolderEntry $parent = null, $locale = null, $includeUnlocalized = null, array $filter = null, $maxDepth = null, $excludes = null) {
+        if ($parent && !$parent->getId()) {
             $parent = null;
         }
 
@@ -152,50 +238,41 @@ class AssetFolderModel extends GenericModel {
             $query->addCondition('{id} NOT IN (%1%)', implode(', ', $excludes));
         }
 
-        $query->addOrderBy('{parent} ASC, {orderIndex} ASC');
-        $folders = $query->query();
+        return $query;
+    }
 
-        // order folders by path
-        $foldersByParent = array();
-        foreach ($folders as $folder) {
-            $folderParent = $folder->getParent();
-            if (!$folderParent) {
-                $folderParent = 0;
+    /**
+     * Counts the items in the provided folder
+     * @param AssetFolderEntry $folder
+     * @param string $locale Code of the locale
+     * @param boolean $fetchUnlocalized
+     * @param array $filter
+     * @param boolean $flatten Set to true to ignore folders and get all child
+     * assets
+     * @return integer Number of items
+     */
+    public function countItems(AssetFolderEntry $folder, $locale = null, $fetchUnlocalized = null, array $filter = null, $flatten = false) {
+        $numItems = 0;
+
+        // get the folders
+        if ($flatten) {
+            $flattenFilter = $filter;
+            $flattenFilter['type'] = 'folder';
+
+            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $flattenFilter, $limit, $page);
+            foreach ($children as $child) {
+                $numItems += $this->countItems($child, $locale, $fetchUnlocalized, $filter, true);
             }
-
-            if (!array_key_exists($folderParent, $foldersByParent)) {
-                $foldersByParent[$folderParent] = array();
-            }
-
-            $foldersByParent[$folderParent][$folder->getId()] = $folder;
-        }
-
-        // restore the tree hierrarchy of the folders
-        $folders = array();
-        foreach ($foldersByParent as $folderPath => $pathFolders) {
-            if ($parent && $folderPath == $path) {
-                $folders = $pathFolders;
-            }
-
-            foreach ($pathFolders as $pathFolder) {
-                $pathFolderPath = $pathFolder->getPath();
-                if (!array_key_exists($pathFolderPath, $foldersByParent)) {
-                    continue;
-                }
-
-                $pathFolder->children = $foldersByParent[$pathFolderPath];
-
-                unset($foldersByParent[$pathFolderPath]);
-            }
-        }
-
-        if ($parent) {
-            return $folders;
-        } elseif ($foldersByParent) {
-            return $foldersByParent[0];
         } else {
-            return array();
+            $numItems = $this->countFolders($folder, $locale, $fetchUnlocalized, $filter);
         }
+
+        // get the assets
+        $assetModel = $this->orm->getAssetModel();
+
+        $numItems += $assetModel->countByFolder($folder->getId(), $locale, $fetchUnlocalized, $filter);
+
+        return $numItems;
     }
 
     /**
@@ -210,32 +287,46 @@ class AssetFolderModel extends GenericModel {
      * @return array Array with folders and assets ordered by their order index.
      * When flattening, array with all the child assets and uhm quite random...
      */
-    public function getItems(AssetFolderEntry $folder, $locale = null, $fetchUnlocalized = null, array $filter = null, $flatten = false, array $items = array()) {
+    public function getItems(AssetFolderEntry $folder, $locale = null, $fetchUnlocalized = null, array $filter = null, $flatten = false, $limit = 0, $page = 1, array $items = array()) {
+        $numItems = count($items);
+
         // get the folders
         if ($flatten) {
             $flattenFilter = $filter;
             $flattenFilter['type'] = 'folder';
 
-            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $flattenFilter);
+            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $flattenFilter, $limit, $page);
             foreach ($children as $child) {
-                $items = $this->getItems($child, $locale, $fetchUnlocalized, $filter, true, $items);
+                $items = $this->getItems($child, $locale, $fetchUnlocalized, $filter, true, $limit, $page, $items);
             }
         } else {
-            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $filter);
+            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $filter, $limit, $page);
             foreach ($children as $child) {
                 $items[$child->getOrderIndex()] = $child;
+
+                $numItems++;
+                if ($limit && $numItems == $limit) {
+                    break;
+                }
             }
         }
 
         // get the assets
-        $assetModel = $this->orm->getAssetModel();
+        if (!$limit || ($limit && $numItems < $limit)) {
+            $assetModel = $this->orm->getAssetModel();
 
-        $assets = $assetModel->getByFolder($folder->getId(), $locale, $fetchUnlocalized, $filter);
-        foreach ($assets as $asset) {
-            if ($flatten) {
-                $items[$asset->getId()] = $asset;
-            } else {
-                $items[$asset->getOrderIndex()] = $asset;
+            $assets = $assetModel->getByFolder($folder->getId(), $locale, $fetchUnlocalized, $filter, $limit, $page);
+            foreach ($assets as $asset) {
+                if ($flatten) {
+                    $items[$asset->getId()] = $asset;
+                } else {
+                    $items[$asset->getOrderIndex()] = $asset;
+                }
+
+                $numItems++;
+                if ($limit && $numItems == $limit) {
+                    break;
+                }
             }
         }
 
