@@ -97,6 +97,10 @@ class AssetFolderModel extends GenericModel {
             return array();
         }
 
+        if ($parent && !$parent->getId()) {
+            $parent = null;
+        }
+
         $query = $this->createFoldersQuery($parent, $locale, $includeUnlocalized, $filter, $maxDepth, $excludes);
 
         if ($limit) {
@@ -168,6 +172,8 @@ class AssetFolderModel extends GenericModel {
             return 0;
         }
 
+        $filter['count'] = true;
+
         $query = $this->createFoldersQuery($parent, $locale, $includeUnlocalized, $filter, $maxDepth, $excludes);
 
         return $query->count();
@@ -194,9 +200,17 @@ class AssetFolderModel extends GenericModel {
         if ($parent) {
             $path = $parent->getPath();
 
-            $query->addCondition('{parent} = %1% OR {parent} LIKE %2%', $path, $path . self::PATH_SEPARATOR . '%');
+            if (isset($filter['count'])) {
+                $query->addCondition('{parent} = %1%', $path, $path . self::PATH_SEPARATOR . '%');
+            } else {
+                $query->addCondition('{parent} = %1% OR {parent} LIKE %2%', $path, $path . self::PATH_SEPARATOR . '%');
+            }
         } else {
-            $path = '';
+            if (isset($filter['count'])) {
+                $query->addCondition('{parent} = %1% OR {parent} IS NULL', 0);
+            } else {
+                $path = '';
+            }
         }
 
         if ($maxDepth !== null) {
@@ -259,7 +273,7 @@ class AssetFolderModel extends GenericModel {
             $flattenFilter = $filter;
             $flattenFilter['type'] = 'folder';
 
-            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $flattenFilter, $limit, $page);
+            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $flattenFilter);
             foreach ($children as $child) {
                 $numItems += $this->countItems($child, $locale, $fetchUnlocalized, $filter, true);
             }
