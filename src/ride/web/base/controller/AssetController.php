@@ -47,6 +47,8 @@ class AssetController extends AbstractController {
         $assetModel = $orm->getAssetModel();
 
         // process arguments
+        $embed = $this->request->getQueryParameter('embed', false);
+
         $views = array('grid', 'list');
         $view = $this->request->getQueryParameter('view', 'grid');
         if (!in_array($view, $views)) {
@@ -109,7 +111,7 @@ class AssetController extends AbstractController {
             } else {
                 $url = $this->getUrl('assets.overview.locale', array('locale' => $locale));
             }
-            $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']) . '&flatten=' . $flatten . '&limit=' . $limit . '&page=' . $page;
+            $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']) . '&embed=' . ($embed ? 1 : 0) . '&flatten=' . $flatten . '&limit=' . $limit . '&page=' . $page;
 
             $this->response->setRedirect($url);
 
@@ -140,7 +142,8 @@ class AssetController extends AbstractController {
             'view' => $view,
             'filter' => $filter,
             'flatten' => $flatten,
-            'urlSuffix' => '?view=' . $view . '&type=' . $filter['type'] . '&date=' . $filter['date'],
+            'embed' => $embed,
+            'urlSuffix' => '?view=' . $view . '&type=' . $filter['type'] . '&date=' . $filter['date'] . '&embed=' . ($embed ? 1 : 0),
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
         ));
@@ -202,10 +205,13 @@ class AssetController extends AbstractController {
             }
         }
 
+        $embed = $this->request->getQueryParameter('embed', false);
+
         // set the view
         $this->setTemplateView('assets/folder', array(
             'form' => $form->getView(),
             'folder' => $folder,
+            'embed' => $embed,
             'referer' => $referer,
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
@@ -333,8 +339,11 @@ class AssetController extends AbstractController {
             return;
         }
 
+        $embed = $this->request->getQueryParameter('embed', false);
+
         $this->setTemplateView('assets/delete', array(
             'name' => $folder->getName(),
+            'embed' => $embed,
             'referer' => $referer,
         ));
     }
@@ -454,10 +463,13 @@ class AssetController extends AbstractController {
             $dimension = $image->getDimension();
         }
 
+        $embed = $this->request->getQueryParameter('embed', false);
+
         $view = $this->setTemplateView('assets/asset', array(
             'form' => $form->getView(),
             'folder' => $folder,
             'asset' => $asset,
+            'embed' => $embed,
             'referer' => $referer,
             'media' => $media,
             'dimension' => $dimension,
@@ -497,8 +509,11 @@ class AssetController extends AbstractController {
             return;
         }
 
+        $embed = $this->request->getQueryParameter('embed', false);
+
         $this->setTemplateView('assets/delete', array(
             'name' => $asset->getName(),
+            'embed' => $embed,
             'referer' => $referer,
         ));
     }
