@@ -46,20 +46,26 @@ class AssetController extends AbstractController {
         $folderModel = $orm->getAssetFolderModel();
         $assetModel = $orm->getAssetModel();
 
-        // process view
+        // process arguments
         $views = array('grid', 'list');
         $view = $this->request->getQueryParameter('view', 'grid');
         if (!in_array($view, $views)) {
             $view = 'grid';
         }
 
-        $limit = 24;
+        $limit = $this->request->getQueryParameter('limit', 24);
+        $limit = $this->request->getBodyParameter('limit', $limit);
+        if (!is_numeric($limit) || $limit < 1) {
+            $limit = 24;
+        }
+        $limit = (integer) $limit;
+
         $page = $this->request->getQueryParameter('page', 1);
         if (!is_numeric($page) || $page < 1) {
             $page = 1;
         }
+        $page = (integer) $page;
 
-        // process filter
         $filter = array(
             'type' => $this->request->getQueryParameter('type', 'all'),
             'date' => $this->request->getQueryParameter('date', 'all'),
@@ -103,7 +109,7 @@ class AssetController extends AbstractController {
             } else {
                 $url = $this->getUrl('assets.overview.locale', array('locale' => $locale));
             }
-            $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']) . '&flatten=' . $flatten;
+            $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']) . '&flatten=' . $flatten . '&limit=' . $limit . '&page=' . $page;
 
             $this->response->setRedirect($url);
 
@@ -127,6 +133,7 @@ class AssetController extends AbstractController {
             'folder' => $folder,
             'items' => $items,
             'numItems' => $numItems,
+            'limit' => $limit,
             'page' => $page,
             'pages' => ceil($numItems / $limit),
             'breadcrumbs' => $folderModel->getBreadcrumbs($folder),
@@ -227,7 +234,7 @@ class AssetController extends AbstractController {
             $folder = $folderModel->createEntry();
         }
 
-        $index = 1;
+        $index = $this->request->getBodyParameter('index', 1);
         $order = $this->request->getBodyParameter('order');
 
         foreach ($order as $item) {
