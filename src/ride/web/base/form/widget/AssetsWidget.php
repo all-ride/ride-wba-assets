@@ -15,7 +15,7 @@ class AssetsWidget extends GenericWidget {
     }
 
     public function getFolderId() {
-        return $folderId;
+        return $this->folderId;
     }
 
     public function setAssets(array $assets) {
