@@ -53,6 +53,12 @@ class AssetController extends AbstractController {
             $view = 'grid';
         }
 
+        $limit = 24;
+        $page = $this->request->getQueryParameter('page', 1);
+        if (!is_numeric($page) || $page < 1) {
+            $page = 1;
+        }
+
         // process filter
         $filter = array(
             'type' => $this->request->getQueryParameter('type', 'all'),
@@ -112,13 +118,17 @@ class AssetController extends AbstractController {
             return;
         }
 
-        $items = $folderModel->getItems($folder, $locale, true, $filter, $flatten);
+        $items = $folderModel->getItems($folder, $locale, true, $filter, $flatten, $limit, $page);
+        $numItems = $folderModel->countItems($folder, $locale, true, $filter, $flatten);
 
         // assign everything to view
         $view = $this->setTemplateView('assets/overview', array(
             'form' => $form->getView(),
             'folder' => $folder,
             'items' => $items,
+            'numItems' => $numItems,
+            'page' => $page,
+            'pages' => ceil($numItems / $limit),
             'breadcrumbs' => $folderModel->getBreadcrumbs($folder),
             'view' => $view,
             'filter' => $filter,

@@ -42,6 +42,14 @@
             "interfaces": ["ride\\library\\form\\component\\Component", "ride\\web\\base\\form\\AssetSelectComponent"],
             "class": "ride\\web\\base\\form\\AssetSelectComponent",
             "id": "asset.select"
+        },
+        {
+            "interfaces": "ride\\library\\form\\row\\Row",
+            "class": "ride\\web\\base\\form\\row\\AssetsRow",
+            "id": "assets",
+            "calls": [
+                "setOrmManager"
+            ]
         }
     ]
 }
