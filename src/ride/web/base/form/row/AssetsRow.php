@@ -86,15 +86,13 @@ class AssetsRow extends AbstractRow implements HtmlRow {
      */
     public function setData($data) {
         $this->data = $data;
+    }
 
+    protected function setWidgetValue() {
         if (!$this->widget) {
             return;
         }
 
-        $this->setWidgetValue();
-    }
-
-    protected function setWidgetValue() {
         $assetModel = $this->orm->getAssetModel();
         $locale = $this->getLocale();
 
@@ -146,8 +144,6 @@ class AssetsRow extends AbstractRow implements HtmlRow {
 
             $this->widget->setFolderId($folder);
         }
-
-        $this->setWidgetValue();
     }
 
     /**
@@ -166,6 +162,8 @@ class AssetsRow extends AbstractRow implements HtmlRow {
      * @return null
      */
     public function prepareForView() {
+        $this->setWidgetValue();
+
         $this->orm = null;
     }
 
