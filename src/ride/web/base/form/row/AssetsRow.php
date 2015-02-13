@@ -139,7 +139,6 @@ class AssetsRow extends AbstractRow implements HtmlRow {
 
         parent::buildRow($namePrefix, $idPrefix, $validationFactory);
 
-        $this->widget->setIsMultiple(false);
         if ($folder) {
             if (!is_numeric($folder)) {
                 $folder = $folder->getId();
