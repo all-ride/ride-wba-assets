@@ -74,8 +74,10 @@ class AssetsRow extends AbstractRow implements HtmlRow {
             foreach ($ids as $id) {
                 $this->data[$id] = $assetModel->createProxy($id, $locale);
             }
-        } else {
+        } elseif ($values[$this->name]) {
             $this->data = $assetModel->createProxy($values[$this->name], $locale);
+        } else {
+            $this->data = null;
         }
     }
 
