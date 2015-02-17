@@ -92,7 +92,7 @@ class AssetFolderModel extends GenericModel {
      * @return array Array with the folder id as key and the Folder instance
      * with requested children as value
      */
-    public function getFolders(AssetFolderEntry $parent = null, $locale = null, $includeUnlocalized = null, array $filter = null, $limit = 0, $page = 1, $maxDepth = 1, $excludes = null) {
+    public function getFolders(AssetFolderEntry $parent = null, $locale = null, $includeUnlocalized = null, array $filter = null, $limit = 0, $page = 1, $maxDepth = 0, $excludes = null) {
         if (isset($filter['type']) && $filter['type'] != 'all' && $filter['type'] != 'folder') {
             return array();
         }
@@ -152,7 +152,7 @@ class AssetFolderModel extends GenericModel {
         if ($parent) {
             return $folders;
         } elseif ($foldersByParent) {
-            return $foldersByParent[0];
+            return array_shift($foldersByParent);
         } else {
             return array();
         }
@@ -167,7 +167,7 @@ class AssetFolderModel extends GenericModel {
      * @param string|array $excludes
      * @return integer Number of folders
      */
-    public function countFolders(AssetFolderEntry $parent = null, $locale = null, $includeUnlocalized = null, array $filter = null, $limit = 0, $page = 1, $maxDepth = 1, $excludes = null) {
+    public function countFolders(AssetFolderEntry $parent = null, $locale = null, $includeUnlocalized = null, array $filter = null, $limit = 0, $page = 1, $maxDepth = 0, $excludes = null) {
         if (isset($filter['type']) && $filter['type'] != 'all' && $filter['type'] != 'folder') {
             return 0;
         }
@@ -200,13 +200,13 @@ class AssetFolderModel extends GenericModel {
         if ($parent) {
             $path = $parent->getPath();
 
-            if (isset($filter['count'])) {
+            if ($maxDepth == 0 || isset($filter['count'])) {
                 $query->addCondition('{parent} = %1%', $path, $path . self::PATH_SEPARATOR . '%');
             } else {
                 $query->addCondition('{parent} = %1% OR {parent} LIKE %2%', $path, $path . self::PATH_SEPARATOR . '%');
             }
         } else {
-            if (isset($filter['count'])) {
+            if ($maxDepth == 0 || isset($filter['count'])) {
                 $query->addCondition('{parent} = %1% OR {parent} IS NULL', 0);
             } else {
                 $path = '';
