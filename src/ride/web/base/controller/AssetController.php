@@ -2,6 +2,7 @@
 
 namespace ride\web\base\controller;
 
+use ride\library\html\Pagination;
 use ride\library\http\Response;
 use ride\library\i18n\I18n;
 use ride\library\image\ImageFactory;
@@ -129,6 +130,16 @@ class AssetController extends AbstractController {
         $items = $folderModel->getItems($folder, $locale, true, $filter, $flatten, $limit, $page);
         $numItems = $folderModel->countItems($folder, $locale, true, $filter, $flatten);
 
+        $urlSuffix = '?view=' . $view . '&type=' . $filter['type'] . '&date=' . $filter['date'] . '&embed=' . ($embed ? 1 : 0);
+        $urlPagination = $this->getUrl('assets.folder.overview', array(
+            'locale' => $locale,
+            'folder' => $folder->getId(),
+        )) . $urlSuffix . '&flatten=' . ($flatten ? 1 : 0) . '&limit=' . $limit . '&page=%page%';
+
+        $pages = ceil($numItems / $limit);
+        $pagination = new Pagination($pages, $page);
+        $pagination->setHref($urlPagination);
+
         // assign everything to view
         $view = $this->setTemplateView('assets/overview', array(
             'form' => $form->getView(),
@@ -136,14 +147,15 @@ class AssetController extends AbstractController {
             'items' => $items,
             'numItems' => $numItems,
             'limit' => $limit,
+            'pagination' => $pagination,
             'page' => $page,
-            'pages' => ceil($numItems / $limit),
+            'pages' => $pages,
             'breadcrumbs' => $folderModel->getBreadcrumbs($folder),
             'view' => $view,
             'filter' => $filter,
             'flatten' => $flatten,
             'embed' => $embed,
-            'urlSuffix' => '?view=' . $view . '&type=' . $filter['type'] . '&date=' . $filter['date'] . '&embed=' . ($embed ? 1 : 0),
+            'urlSuffix' => $urlSuffix,
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
         ));
