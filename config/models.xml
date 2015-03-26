@@ -13,7 +13,9 @@
         <field name="thumbnail" type="image" />
         <field name="type" type="string" />
         <field name="source" type="string" />
-        <field name="value" type="string" />
+        <field name="value" type="string">
+            <validation name="required" />
+        </field>
         <field name="embedUrl" type="website" />
         <field name="meta" model="AssetMeta" relation="hasMany" />
         <field name="slug" type="string" localized="true" />
