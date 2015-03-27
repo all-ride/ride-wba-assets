@@ -60,7 +60,7 @@ class AssetsRow extends AbstractRow implements HtmlRow {
      * @return null
      */
     public function processData(array $values) {
-        if (!isset($values[$this->name])) {
+        if (!array_key_exists($this->name, $values)) {
             return;
         }
 
@@ -70,9 +70,11 @@ class AssetsRow extends AbstractRow implements HtmlRow {
         if ($this->isMultiple()) {
             $this->data = array();
 
-            $ids = explode(',', $values[$this->name]);
-            foreach ($ids as $id) {
-                $this->data[$id] = $assetModel->createProxy($id, $locale);
+            if ($values[$this->name]) {
+                $ids = explode(',', $values[$this->name]);
+                foreach ($ids as $id) {
+                    $this->data[$id] = $assetModel->createProxy($id, $locale);
+                }
             }
         } elseif ($values[$this->name]) {
             $this->data = $assetModel->createProxy($values[$this->name], $locale);
