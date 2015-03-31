@@ -90,6 +90,10 @@ class AssetModel extends GenericModel {
             $query->addCondition('{folder} = %1%', $folder);
         }
 
+        if (isset($filter['query'])) {
+            $query->addCondition('{name} LIKE %1% OR {description} LIKE %1%', '%' . $filter['query'] . '%');
+        }
+
         if (isset($filter['type']) && $filter['type'] != 'all') {
             $query->addCondition('{type} = %1%', $filter['type']);
         }

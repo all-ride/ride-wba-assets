@@ -221,6 +221,10 @@ class AssetFolderModel extends GenericModel {
             $query->addCondition('(LENGTH({parent}) - LENGTH(REPLACE({parent}, %1%, %2%))) <= %3%', self::PATH_SEPARATOR, '', $maxDepth);
         }
 
+        if (isset($filter['query'])) {
+            $query->addCondition('{name} LIKE %1% OR {description} LIKE %1%', '%' . $filter['query'] . '%');
+        }
+
         if (isset($filter['date']) && $filter['date'] != 'all') {
             if ($filter['date'] == 'today') {
                 $filter['date'] = date('Y-m-d');

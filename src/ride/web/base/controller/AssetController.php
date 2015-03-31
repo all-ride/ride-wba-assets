@@ -72,6 +72,7 @@ class AssetController extends AbstractController {
         $filter = array(
             'type' => $this->request->getQueryParameter('type', 'all'),
             'date' => $this->request->getQueryParameter('date', 'all'),
+            'query' => $this->request->getQueryParameter('query'),
         );
         $flatten = $this->request->getQueryParameter('flatten', 0);
 
@@ -98,6 +99,11 @@ class AssetController extends AbstractController {
         $form->addRow('date', 'select', array(
             'options' => $months,
         ));
+        $form->addRow('query', 'string', array(
+            'attributes' => array(
+                'placeholder' => $translator->translate('label.search'),
+            ),
+        ));
         $form = $form->build();
 
         // handle filter form
@@ -112,7 +118,11 @@ class AssetController extends AbstractController {
             } else {
                 $url = $this->getUrl('assets.overview.locale', array('locale' => $locale));
             }
+
             $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']) . '&embed=' . ($embed ? 1 : 0) . '&flatten=' . $flatten . '&limit=' . $limit . '&page=' . $page;
+            if ($data['query']) {
+                $url .= '&query=' . urlencode($data['query']);
+            }
 
             $this->response->setRedirect($url);
 
@@ -131,10 +141,14 @@ class AssetController extends AbstractController {
         $numItems = $folderModel->countItems($folder, $locale, true, $filter, $flatten);
 
         $urlSuffix = '?view=' . $view . '&type=' . $filter['type'] . '&date=' . $filter['date'] . '&embed=' . ($embed ? 1 : 0);
+
         $urlPagination = $this->getUrl('assets.folder.overview', array(
             'locale' => $locale,
             'folder' => $folder->getId(),
         )) . $urlSuffix . '&flatten=' . ($flatten ? 1 : 0) . '&limit=' . $limit . '&page=%page%';
+        if ($filter['query']) {
+            $urlPagination .= '&query=' . urlencode($filter['query']);
+        }
 
         $pages = ceil($numItems / $limit);
         $pagination = new Pagination($pages, $page);
