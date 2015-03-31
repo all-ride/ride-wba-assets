@@ -109,4 +109,24 @@ class AssetEntry extends OrmAssetEntry {
         parent::setValue($value);
     }
 
+    /**
+     * Updates the thumbnail of the asset, setting isParsed flag
+     * @param string $thumbnail
+     * @return null
+     */
+    public function setThumbnail($thumbnail) {
+        if (!$this->getId()) {
+            $this->setIsParsed(false);
+        } else {
+            $oldThumbnail = $this->getThumbnail();
+            if ($thumbnail && $oldThumbnail === $thumbnail) {
+                $this->setIsParsed(true);
+            } else {
+                $this->setIsParsed(false);
+            }
+        }
+
+        parent::setThumbnail($thumbnail);
+    }
+
 }
