@@ -3,21 +3,20 @@
     <model name="Asset" modelClass="ride\web\base\asset\AssetModel" entryClass="ride\web\base\asset\AssetEntry">
         <field name="folder" model="AssetFolder" relation="belongsTo">
         </field>
-        <field name="orderIndex" type="integer" />
         <field name="name" type="string" localized="true">
             <option name="label.name" value="label.name" />
         </field>
         <field name="description" type="wysiwyg" localized="true">
             <option name="label.name" value="label.description" />
         </field>
-        <field name="thumbnail" type="image" />
         <field name="type" type="string" />
         <field name="source" type="string" />
         <field name="value" type="string">
             <validation name="required" />
         </field>
         <field name="embedUrl" type="website" />
-        <field name="meta" model="AssetMeta" relation="hasMany" />
+        <field name="thumbnail" type="image" />
+        <field name="orderIndex" type="integer" />
         <field name="slug" type="string" localized="true" />
 
         <format name="title">{name}</format>
@@ -34,7 +33,6 @@
         <field name="parent" type="string">
             <option name="label.name" value="label.parent" />
         </field>
-        <field name="orderIndex" type="integer" />
         <field name="name" type="string" localized="true">
             <option name="label.name" value="label.name" />
             <validation name="required" />
@@ -43,6 +41,7 @@
             <option name="label.name" value="label.description" />
         </field>
         <field name="assets" model="Asset" relation="hasMany" relationOrder="{orderIndex} ASC" />
+        <field name="orderIndex" type="integer" />
         <field name="slug" type="string" localized="true" />
 
         <format name="title">{name}</format>
@@ -51,19 +50,5 @@
         <option name="behaviour.log" value="true" />
         <option name="behaviour.slug" value="name" />
         <option name="behaviour.version" value="true" />
-    </model>
-    <model name="AssetMeta">
-        <field name="asset" model="Asset" relation="belongsTo">
-            <validation name="required" />
-        </field>
-        <field name="name" type="string">
-            <validation name="required" />
-        </field>
-        <field name="value" type="text" localized="true" />
-
-        <format name="title">{name}</format>
-        <format name="teaser">{asset.name}</format>
-
-        <option name="behaviour.log" value="true" />
     </model>
 </models>

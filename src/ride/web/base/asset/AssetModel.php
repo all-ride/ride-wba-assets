@@ -50,10 +50,10 @@ class AssetModel extends GenericModel {
      * @param string $locale Code of the locale
      * @return array
      */
-    public function getByFolder($folder, $locale = null, $fetchUnlocalized = null, array $filter = null, $limit = 0, $page = 1) {
+    public function getByFolder($folder, $locale = null, $fetchUnlocalized = null, array $filter = null, $limit = 0, $page = 1, $offset = 0) {
         $query = $this->createByFolderQuery($folder, $locale, $fetchUnlocalized, $filter);
         if ($limit) {
-            $query->setLimit($limit, ($page - 1) * $limit);
+            $query->setLimit($limit, (($page - 1) * $limit) + $offset);
         }
 
         return $query->query();
@@ -84,7 +84,7 @@ class AssetModel extends GenericModel {
 
         if (is_array($folder)) {
             $query->addCondition('{folder} IN %1%', $folder);
-        } elseif (!$folder) {
+        } elseif (!$folder || !$folder->getId()) {
             $query->addCondition('{folder} IS NULL');
         } else {
             $query->addCondition('{folder} = %1%', $folder);
@@ -176,9 +176,7 @@ class AssetModel extends GenericModel {
      */
     protected function saveEntry($asset) {
         if (!$asset->getId() && !$asset->getOrderIndex()) {
-            $folderModel = $this->orm->getAssetFolderModel();
-
-            $asset->setOrderIndex($folderModel->getNewOrderIndex($asset->getFolder()));
+            $asset->setOrderIndex($this->getNewOrderIndex($asset->getFolder()));
         }
 
         if (!$asset->isParsed()) {
@@ -186,6 +184,26 @@ class AssetModel extends GenericModel {
         }
 
         parent::saveEntry($asset);
+    }
+
+    /**
+     * Get an order index for a new item in a folder
+     * @param string $parent path of the parent of the new node
+     * @return int new order index
+     */
+    protected function getNewOrderIndex(AssetFolderEntry $parent = null) {
+        $query = $this->createQuery();
+        $query->setFields('MAX({orderIndex}) AS maxOrderIndex');
+
+        if ($parent) {
+            $query->addCondition('{folder} = %1%', $parent->getId());
+        } else {
+            $query->addCondition('{folder} IS NULL');
+        }
+
+        $result = $query->queryFirst();
+
+        return $result->maxOrderIndex + 1;
     }
 
     /**
@@ -281,12 +299,113 @@ class AssetModel extends GenericModel {
                     $asset->setType(AssetEntry::TYPE_AUDIO);
 
                     break;
+                case 'pdf':
+                    $asset->setType(AssetEntry::TYPE_PDF);
+
+                    break;
                 default:
                     $asset->setType(AssetEntry::TYPE_UNKNOWN);
 
                     break;
             }
         }
+    }
+
+    /**
+     * Deletes the data from the database
+     * @param AssetFolderEntry $folder
+     * @return folder
+     */
+    protected function deleteEntry($asset) {
+        // delete the asset
+        $asset = parent::deleteEntry($asset);
+        if (!$asset) {
+            return $asset;
+        }
+
+        // reorder the siblings
+        $this->orderFolder($asset->getFolder());
+
+        return $asset;
+    }
+
+    /**
+     * Orders the provided items in the order they are provided
+     * @param array $items
+     * @param integer $startIndex
+     * @return null
+     */
+    public function order(array $assets, $startIndex = 1) {
+        $isTransactionStarted = $this->beginTransaction();
+        try {
+            $index = $startIndex;
+            foreach ($assets as $asset) {
+                $asset->setOrderIndex($index);
+
+                $this->save($asset);
+
+                $index++;
+            }
+
+            $this->commitTransaction($isTransactionStarted);
+        } catch (Exception $exception) {
+            $this->rollbackTransaction($isTransactionStarted);
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * Orders the items in the provided parent with the provided algorithm
+     * @param AssetFolderEntry $parent Parent of the items to order
+     * @param string $order Name of the order algorithm
+     * @return null
+     */
+    public function orderFolder(AssetFolderEntry $parent = null, $order = self::ORDER_RESYNC) {
+        $index = 1;
+        $ordered = array();
+
+        $assets = $this->getByFolder($parent);
+        switch ($order) {
+            case AssetFolderModel::ORDER_ASC:
+            case AssetFolderModel::ORDER_DESC:
+                foreach ($assets as $asset) {
+                    $base = $asset->getName();
+                    $name = $base;
+                    $index = 1;
+
+                    while (isset($ordered[$name])) {
+                        $name = $base . '-' . $index;
+                        $index++;
+                    }
+
+                    $ordered[$name] = $asset;
+                }
+
+                break;
+            case AssetFolderModel::ORDER_NEWEST:
+            case AssetFolderModel::ORDER_OLDEST:
+                foreach ($assets as $asset) {
+                    $ordered[$asset->getDateAdded()] = $asset;
+                }
+
+                break;
+            case AssetFolderModel::ORDER_RESYNC:
+                foreach ($assets as $asset) {
+                    $ordered[] = $asset;
+                }
+
+                break;
+            default:
+                throw new Exception('Could not order the assets: invalid order method provided');
+        }
+
+        ksort($ordered);
+        if ($order == AssetFolderModel::ORDER_DESC || $order == AssetFolderModel::ORDER_OLDEST) {
+            $ordered = array_reverse($ordered);
+        }
+
+        $this->order($ordered);
     }
 
     /**

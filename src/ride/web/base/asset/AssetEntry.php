@@ -22,6 +22,12 @@ class AssetEntry extends OrmAssetEntry {
     const TYPE_IMAGE = 'image';
 
     /**
+     * Pdf type
+     * @var string
+     */
+    const TYPE_PDF = 'pdf';
+
+    /**
      * Unknown type
      * @var string
      */
