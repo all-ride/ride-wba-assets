@@ -8,6 +8,8 @@ use ride\library\image\exception\ImageException;
 use ride\library\i18n\translator\Translator;
 use ride\library\orm\model\GenericModel;
 
+use \Exception;
+
 /**
  * Model for the asset items
  */
@@ -312,39 +314,30 @@ class AssetModel extends GenericModel {
     }
 
     /**
-     * Deletes the data from the database
-     * @param AssetFolderEntry $folder
-     * @return folder
-     */
-    protected function deleteEntry($asset) {
-        // delete the asset
-        $asset = parent::deleteEntry($asset);
-        if (!$asset) {
-            return $asset;
-        }
-
-        // reorder the siblings
-        $this->orderFolder($asset->getFolder());
-
-        return $asset;
-    }
-
-    /**
      * Orders the provided items in the order they are provided
      * @param array $items
-     * @param integer $startIndex
      * @return null
      */
-    public function order(array $assets, $startIndex = 1) {
+    public function order(array $assets) {
+        $indexes = array();
+        foreach ($assets as $asset) {
+            $orderIndex = $asset->getOrderIndex();
+            if (isset($indexes[$orderIndex])) {
+                throw new Exception('Could not order the assets: weight ' . $orderIndex . ' is used by more then 1 asset');
+            }
+
+            $indexes[$orderIndex] = true;
+        }
+
+        ksort($indexes);
+        $indexes = array_keys($indexes);
+
         $isTransactionStarted = $this->beginTransaction();
         try {
-            $index = $startIndex;
             foreach ($assets as $asset) {
-                $asset->setOrderIndex($index);
+                $asset->setOrderIndex(array_shift($indexes));
 
                 $this->save($asset);
-
-                $index++;
             }
 
             $this->commitTransaction($isTransactionStarted);
