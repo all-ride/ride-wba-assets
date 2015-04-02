@@ -373,34 +373,34 @@ class AssetFolderModel extends GenericModel {
 
         $this->delete($children);
 
-        // reorder the siblings
-        $parentFolderId = $folder->getParentFolderId();
-        if ($parentFolderId) {
-            $parent = $this->createProxy($parentFolderId, $folder->getLocale());
-        } else {
-            $parent = null;
-        }
-        $this->orderFolder($parent);
-
         return $folder;
     }
 
     /**
      * Orders the provided folders in the order they are provided
      * @param array $folders
-     * @param integer $startIndex
      * @return null
      */
-    public function order(array $folders, $startIndex = 1) {
+    public function order(array $folders) {
+        $indexes = array();
+        foreach ($folders as $folder) {
+            $orderIndex = $folder->getOrderIndex();
+            if (isset($indexes[$orderIndex])) {
+                throw new Exception('Could not order the folders: weight ' . $orderIndex . ' is used by more then 1 folder');
+            }
+
+            $indexes[$orderIndex] = true;
+        }
+
+        ksort($indexes);
+        $indexes = array_keys($indexes);
+
         $isTransactionStarted = $this->beginTransaction();
         try {
-            $index = $startIndex;
             foreach ($folders as $folder) {
-                $folder->setOrderIndex($index);
+                $folder->setOrderIndex(array_shift($indexes));
 
                 $this->save($folder);
-
-                $index++;
             }
 
             $this->commitTransaction($isTransactionStarted);

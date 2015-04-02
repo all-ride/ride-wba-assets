@@ -417,12 +417,7 @@ class AssetController extends AbstractController {
             $folders[] = $folderModel->createProxy($folder);
         }
 
-        $limit = $this->request->getBodyParameter('limit', 24);
-        $page = $this->request->getBodyParameter('page', 1);
-
-        $index = ($page - 1) * $limit;
-
-        $folderModel->order($folders, $index);
+        $folderModel->order($folders);
     }
 
     /**
@@ -628,37 +623,8 @@ class AssetController extends AbstractController {
             $assets[] = $assetModel->createProxy($asset);
         }
 
-        // calculate starting index
-        $limit = $this->request->getBodyParameter('limit', 24);
-        $page = $this->request->getBodyParameter('page', 1);
-
-        $numFolders = $folderModel->countFolders($folder, $locale, true);
-
-        $folderPages = ceil($numFolders / $limit);
-        if ($page < $folderPages) {
-            $this->response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
-
-            return;
-        }
-
-        if ($page == $folderPages) {
-            $index = 1;
-        } else {
-            $page -= $folderPages;
-
-            $offset = $numFolders % $limit;
-            if ($offset) {
-                $page++;
-            }
-
-            $index = 1 + (($page - 1) * $limit);
-            if ($page !== 1 && $offset) {
-                $index -= $offset;
-            }
-        }
-
         // perform order
-        $assetModel->order($assets, $index);
+        $assetModel->order($assets);
     }
 
     /**
