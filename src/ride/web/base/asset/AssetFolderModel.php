@@ -17,6 +17,36 @@ class AssetFolderModel extends GenericModel {
      */
     const PATH_SEPARATOR = '-';
 
+    /**
+     * Ascending order algorithm
+     * @var string
+     */
+    const ORDER_ASC = 'asc';
+
+    /**
+     * Descending order algorithm
+     * @var string
+     */
+    const ORDER_DESC = 'desc';
+
+    /**
+     * Newest order algorithm
+     * @var string
+     */
+    const ORDER_NEWEST = 'newest';
+
+    /**
+     * Oldest order algorithm
+     * @var string
+     */
+    const ORDER_OLDEST = 'oldest';
+
+    /**
+     * Oldest order algorithm
+     * @var string
+     */
+    const ORDER_RESYNC = 'resync';
+
     public function getOptionList($locale = null, $fetchUnlocalized = null) {
         $query = $this->createQuery($locale);
         if ($fetchUnlocalized != null) {
@@ -167,7 +197,7 @@ class AssetFolderModel extends GenericModel {
      * @param string|array $excludes
      * @return integer Number of folders
      */
-    public function countFolders(AssetFolderEntry $parent = null, $locale = null, $includeUnlocalized = null, array $filter = null, $limit = 0, $page = 1, $maxDepth = 0, $excludes = null) {
+    public function countFolders(AssetFolderEntry $parent = null, $locale = null, $includeUnlocalized = null, array $filter = null, $maxDepth = 0, $excludes = null) {
         if (isset($filter['type']) && $filter['type'] != 'all' && $filter['type'] != 'folder') {
             return 0;
         }
@@ -260,102 +290,6 @@ class AssetFolderModel extends GenericModel {
     }
 
     /**
-     * Counts the items in the provided folder
-     * @param AssetFolderEntry $folder
-     * @param string $locale Code of the locale
-     * @param boolean $fetchUnlocalized
-     * @param array $filter
-     * @param boolean $flatten Set to true to ignore folders and get all child
-     * assets
-     * @return integer Number of items
-     */
-    public function countItems(AssetFolderEntry $folder, $locale = null, $fetchUnlocalized = null, array $filter = null, $flatten = false) {
-        $numItems = 0;
-
-        // get the folders
-        if ($flatten) {
-            $flattenFilter = $filter;
-            $flattenFilter['type'] = 'folder';
-
-            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $flattenFilter);
-            foreach ($children as $child) {
-                $numItems += $this->countItems($child, $locale, $fetchUnlocalized, $filter, true);
-            }
-        } else {
-            $numItems = $this->countFolders($folder, $locale, $fetchUnlocalized, $filter);
-        }
-
-        // get the assets
-        $assetModel = $this->orm->getAssetModel();
-
-        $numItems += $assetModel->countByFolder($folder->getId(), $locale, $fetchUnlocalized, $filter);
-
-        return $numItems;
-    }
-
-    /**
-     * Gets the items in the provided folder
-     * @param AssetFolderEntry $folder
-     * @param string $locale Code of the locale
-     * @param boolean $fetchUnlocalized
-     * @param array $filter
-     * @param boolean $flatten Set to true to ignore folders and get all child
-     * assets
-     * @param array $items Current item result, needed for recursive calls
-     * @return array Array with folders and assets ordered by their order index.
-     * When flattening, array with all the child assets and uhm quite random...
-     */
-    public function getItems(AssetFolderEntry $folder, $locale = null, $fetchUnlocalized = null, array $filter = null, $flatten = false, $limit = 0, $page = 1, array $items = array()) {
-        $numItems = count($items);
-
-        // get the folders
-        if ($flatten) {
-            $flattenFilter = $filter;
-            $flattenFilter['type'] = 'folder';
-
-            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $flattenFilter, $limit, $page);
-            foreach ($children as $child) {
-                $items = $this->getItems($child, $locale, $fetchUnlocalized, $filter, true, $limit, $page, $items);
-            }
-        } else {
-            $children = $this->getFolders($folder, $locale, $fetchUnlocalized, $filter, $limit, $page);
-            foreach ($children as $child) {
-                $items[$child->getOrderIndex()] = $child;
-
-                $numItems++;
-                if ($limit && $numItems == $limit) {
-                    break;
-                }
-            }
-        }
-
-        // get the assets
-        if (!$limit || ($limit && $numItems < $limit)) {
-            $assetModel = $this->orm->getAssetModel();
-
-            $assets = $assetModel->getByFolder($folder->getId(), $locale, $fetchUnlocalized, $filter, $limit, $page);
-            foreach ($assets as $asset) {
-                if ($flatten) {
-                    $items[$asset->getId()] = $asset;
-                } else {
-                    $items[$asset->getOrderIndex()] = $asset;
-                }
-
-                $numItems++;
-                if ($limit && $numItems == $limit) {
-                    break;
-                }
-            }
-        }
-
-        if (!$flatten) {
-            ksort($items);
-        }
-
-        return $items;
-    }
-
-    /**
      * Get the root node of a node
      * @param int|Folder $folder id of the node or an instance of a Folder
      * @param string $locale code of the locale
@@ -422,11 +356,13 @@ class AssetFolderModel extends GenericModel {
      * @return folder
      */
     protected function deleteEntry($folder) {
+        // delete the folder
         $folder = parent::deleteEntry($folder);
         if (!$folder) {
             return $folder;
         }
 
+        // delete al the children
         $path = $folder->getPath();
 
         $query = $this->createQuery();
@@ -437,7 +373,96 @@ class AssetFolderModel extends GenericModel {
 
         $this->delete($children);
 
+        // reorder the siblings
+        $parentFolderId = $folder->getParentFolderId();
+        if ($parentFolderId) {
+            $parent = $this->createProxy($parentFolderId, $folder->getLocale());
+        } else {
+            $parent = null;
+        }
+        $this->orderFolder($parent);
+
         return $folder;
+    }
+
+    /**
+     * Orders the provided folders in the order they are provided
+     * @param array $folders
+     * @param integer $startIndex
+     * @return null
+     */
+    public function order(array $folders, $startIndex = 1) {
+        $isTransactionStarted = $this->beginTransaction();
+        try {
+            $index = $startIndex;
+            foreach ($folders as $folder) {
+                $folder->setOrderIndex($index);
+
+                $this->save($folder);
+
+                $index++;
+            }
+
+            $this->commitTransaction($isTransactionStarted);
+        } catch (Exception $exception) {
+            $this->rollbackTransaction($isTransactionStarted);
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * Orders the items in the provided parent with the provided algorithm
+     * @param AssetFolderEntry $parent Parent of the items to order
+     * @param string $order Name of the order algorithm
+     * @return null
+     */
+    public function orderFolder(AssetFolderEntry $parent = null, $order = self::ORDER_RESYNC) {
+        $index = 1;
+        $ordered = array();
+
+        $folders = $this->getFolders($parent);
+
+        switch ($order) {
+            case self::ORDER_ASC:
+            case self::ORDER_DESC:
+                foreach ($folders as $folder) {
+                    $base = $folder->getName();
+                    $name = $base;
+                    $index = 1;
+
+                    while (isset($ordered[$name])) {
+                        $name = $base . '-' . $index;
+                        $index++;
+                    }
+
+                    $ordered[$name] = $folder;
+                }
+
+                break;
+            case self::ORDER_NEWEST:
+            case self::ORDER_OLDEST:
+                foreach ($folders as $folder) {
+                    $ordered[$folder->getDateAdded()] = $folder;
+                }
+
+                break;
+            case self::ORDER_RESYNC:
+                foreach ($folders as $folder) {
+                    $ordered[] = $folder;
+                }
+
+                break;
+            default:
+                throw new Exception('Could not order the assets: invalid order method provided');
+        }
+
+        ksort($ordered);
+        if ($order == self::ORDER_DESC || $order == self::ORDER_OLDEST) {
+            $ordered = array_reverse($ordered);
+        }
+
+        $this->order($ordered);
     }
 
     /**
@@ -445,30 +470,19 @@ class AssetFolderModel extends GenericModel {
      * @param string $parent path of the parent of the new node
      * @return int new order index
      */
-    public function getNewOrderIndex(AssetFolderEntry $parent = null) {
-        $assetModel = $this->orm->getAssetModel();
-
-        $folderQuery = $this->createQuery();
-        $folderQuery->setFields('MAX({orderIndex}) AS maxOrderIndex');
-
-        $assetQuery = $assetModel->createQuery();
-        $assetQuery->setFields('MAX({orderIndex}) AS maxOrderIndex');
+    protected function getNewOrderIndex(AssetFolderEntry $parent = null) {
+        $query = $this->createQuery();
+        $query->setFields('MAX({orderIndex}) AS maxOrderIndex');
 
         if ($parent) {
-            $folderQuery->addCondition('{parent} = %1%', $parent->getPath());
-            $assetQuery->addCondition('{folder} = %1%', $parent->getId());
+            $query->addCondition('{parent} = %1%', $parent->getPath());
         } else {
-            $folderQuery->addCondition('{parent} IS NULL OR {parent} = %1%', '0');
-            $assetQuery->addCondition('{folder} IS NULL');
+            $query->addCondition('{parent} IS NULL OR {parent} = %1%', '0');
         }
 
-        $result = $folderQuery->queryFirst();
-        $folderWeight = $result->maxOrderIndex + 1;
+        $result = $query->queryFirst();
 
-        $result = $assetQuery->queryFirst();
-        $assetWeight = $result->maxOrderIndex + 1;
-
-        return max($folderWeight, $assetWeight);
+        return $result->maxOrderIndex + 1;
     }
 
     /**

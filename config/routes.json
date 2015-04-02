@@ -51,10 +51,17 @@
             "id": "assets.folder.delete"
         },
         {
-            "path": "/admin/assets/%locale%/folders/%folder%/sort",
+            "path": "/admin/assets/%locale%/folders/%folder%/sort/folders",
             "controller": "ride\\web\\base\\controller\\AssetController",
             "action": "folderSortAction",
-            "id": "assets.sort",
+            "id": "assets.folder.sort",
+            "methods": "post"
+        },
+        {
+            "path": "/admin/assets/%locale%/folders/%folder%/sort/items",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "assetSortAction",
+            "id": "assets.asset.sort",
             "methods": "post"
         },
         {

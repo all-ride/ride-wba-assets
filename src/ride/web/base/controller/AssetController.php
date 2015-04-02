@@ -28,6 +28,7 @@ class AssetController extends AbstractController {
      * @return null
      */
     public function indexAction(I18n $i18n, OrmManager $orm, $locale = null, $folder = null) {
+        // force a locale
         if (!$locale) {
             $url = $this->getUrl('assets.overview.locale', array('locale' => $this->getLocale()));
 
@@ -36,6 +37,7 @@ class AssetController extends AbstractController {
             return;
         }
 
+        // check locale
         try {
             $locale = $i18n->getLocale($locale)->getCode();
         } catch (LocaleNotFoundException $exception) {
@@ -49,6 +51,7 @@ class AssetController extends AbstractController {
 
         // process arguments
         $embed = $this->request->getQueryParameter('embed', false);
+        $selected = $this->request->getQueryParameter('selected');
 
         $views = array('grid', 'list');
         $view = $this->request->getQueryParameter('view', 'grid');
@@ -74,9 +77,9 @@ class AssetController extends AbstractController {
             'date' => $this->request->getQueryParameter('date', 'all'),
             'query' => $this->request->getQueryParameter('query'),
         );
-        $flatten = $this->request->getQueryParameter('flatten', 0);
+        $isFiltered = $filter['type'] != 'all' || $filter['date'] != 'all' || $filter['query'];
 
-        // create the filter form
+        // create the form
         $translator = $this->getTranslator();
 
         $types = $assetModel->getTypes($translator);
@@ -104,24 +107,58 @@ class AssetController extends AbstractController {
                 'placeholder' => $translator->translate('label.search'),
             ),
         ));
+        $form->addRow('action', 'hidden', array());
+        $form->addRow('order', 'hidden', array());
+        $form->addRow('limit', 'hidden', array());
+        $form->addRow('assets', 'hidden', array(
+            'multiple' => true,
+        ));
+        $form->addRow('folders', 'hidden', array(
+            'multiple' => true,
+        ));
+        $form->addRow('submit', 'hidden', array());
         $form = $form->build();
 
-        // handle filter form
+        // handle form
         if ($form->isSubmitted()) {
+            $url = $this->request->getUrl();
+
             $data = $form->getData();
+            k($data);
+            switch ($data['submit']) {
+                case 'limit':
+                    $limit = $data['limit'];
+                case 'filter':
+                    if ($folder) {
+                        $url = $this->getUrl('assets.folder.overview', array(
+                            'locale' => $locale,
+                            'folder' => $folder,
+                        ));
+                    } else {
+                        $url = $this->getUrl('assets.overview.locale', array('locale' => $locale));
+                    }
 
-            if ($folder) {
-                $url = $this->getUrl('assets.folder.overview', array(
-                    'locale' => $locale,
-                    'folder' => $folder,
-                ));
-            } else {
-                $url = $this->getUrl('assets.overview.locale', array('locale' => $locale));
-            }
+                    $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']) . '&embed=' . ($embed ? 1 : 0) . '&limit=' . $limit . '&page=1';
+                    if ($selected) {
+                        $url .= '&selected=' . $selected;
+                    }
+                    if ($data['query']) {
+                        $url .= '&query=' . urlencode($data['query']);
+                    }
 
-            $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']) . '&embed=' . ($embed ? 1 : 0) . '&flatten=' . $flatten . '&limit=' . $limit . '&page=' . $page;
-            if ($data['query']) {
-                $url .= '&query=' . urlencode($data['query']);
+                    break;
+                case 'bulk-action':
+                    if (!$this->processBulkAction($orm, $locale, $folder, $data)) {
+                        return;
+                    }
+
+                    break;
+                case 'order':
+                    if (!$this->processSort($orm, $locale, $folder, $data)) {
+                        return;
+                    }
+
+                    break;
             }
 
             $this->response->setRedirect($url);
@@ -137,28 +174,61 @@ class AssetController extends AbstractController {
             return;
         }
 
-        $items = $folderModel->getItems($folder, $locale, true, $filter, $flatten, $limit, $page);
-        $numItems = $folderModel->countItems($folder, $locale, true, $filter, $flatten);
+        $numFolders = $folderModel->countFolders($folder, $locale, true, $filter);
+        $numAssets = $assetModel->countByFolder($folder, $locale, true, $filter);
+        $numItems = $numFolders + $numAssets;
 
-        $urlSuffix = '?view=' . $view . '&type=' . $filter['type'] . '&date=' . $filter['date'] . '&embed=' . ($embed ? 1 : 0);
+        $folders = $folderModel->getFolders($folder, $locale, true, $filter, $limit, $page);
+        if (count($folders) < $limit) {
+            $assetLimit = $limit;
+            $assetPage = $page;
+            $offset = 0;
+
+            if ($folders) {
+                $assetLimit -= count($folders);
+                $assetPage = 1;
+            } else {
+                if ($numFolders) {
+                    $assetPage -= ceil($numFolders / $limit);
+                }
+
+                if ($page != 1 && $numFolders) {
+                    $offset = $limit - ($numFolders % $limit);
+                }
+            }
+
+            $assets = $assetModel->getByFolder($folder, $locale, true, $filter, (integer) $assetLimit, (integer) $assetPage, $offset);
+        } else {
+            $assets = array();
+        }
+
+        $urlSuffix = '?view=' . $view . '&type=' . $filter['type'] . '&date=' . $filter['date'] . '&embed=' . ($embed ? 1 : 0) . '&limit=' . $limit . '&page=%page%';
+        if ($filter['query']) {
+            $urlSuffix .= '&query=' . urlencode($filter['query']);
+        }
+        if ($selected) {
+            $urlSuffix .= '&selected=' . $selected;
+        }
 
         $urlPagination = $this->getUrl('assets.folder.overview', array(
             'locale' => $locale,
             'folder' => $folder->getId(),
-        )) . $urlSuffix . '&flatten=' . ($flatten ? 1 : 0) . '&limit=' . $limit . '&page=%page%';
-        if ($filter['query']) {
-            $urlPagination .= '&query=' . urlencode($filter['query']);
-        }
+        )) . $urlSuffix;
 
         $pages = ceil($numItems / $limit);
         $pagination = new Pagination($pages, $page);
         $pagination->setHref($urlPagination);
 
+        $urlSuffix = str_replace('%page%', $page, $urlSuffix);
+
         // assign everything to view
         $view = $this->setTemplateView('assets/overview', array(
             'form' => $form->getView(),
             'folder' => $folder,
-            'items' => $items,
+            'folders' => $folders,
+            'assets' => $assets,
+            'numFolders' => $numFolders,
+            'numAssets' => $numAssets,
             'numItems' => $numItems,
             'limit' => $limit,
             'pagination' => $pagination,
@@ -167,12 +237,89 @@ class AssetController extends AbstractController {
             'breadcrumbs' => $folderModel->getBreadcrumbs($folder),
             'view' => $view,
             'filter' => $filter,
-            'flatten' => $flatten,
+            'isFiltered' => $isFiltered,
             'embed' => $embed,
+            'selected' => $selected,
             'urlSuffix' => $urlSuffix,
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
         ));
+    }
+
+    /**
+     * Action to process bulk actions on the items of a folder
+     * @param \ride\library\orm\OrmManager $orm Instance of the ORM
+     * @param string $locale Code of the locale
+     * @param string $folder Id or slug of the folder
+     * @return null
+     */
+    protected function processBulkAction(OrmManager $orm, $locale, $folder = null, array $data) {
+        $assetModel = $orm->getAssetModel();
+        $folderModel = $orm->getAssetFolderModel();
+
+        $folder = $folderModel->getFolder($folder);
+        if (!$folder) {
+            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+
+            return false;
+        }
+
+        if ($data['action'] == 'delete') {
+            $children = $data['folders'];
+            if ($children) {
+                foreach ($children as $childId) {
+                    $child = $folderModel->getById($childId, $locale);
+                    if (!$child) {
+                        continue;
+                    }
+
+                    $folderModel->delete($child);
+
+                    $this->addSuccess('success.data.deleted', array('data' => $child->getName()));
+                }
+            }
+
+            $assets = $data['assets'];
+            if ($assets) {
+                foreach ($assets as $assetId) {
+                    $asset = $assetModel->getById($assetId, $locale);
+                    if (!$asset) {
+                        continue;
+                    }
+
+                    $assetModel->delete($asset);
+
+                    $this->addSuccess('success.data.deleted', array('data' => $asset->getName()));
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Sorts the items of a folder
+     * @param \ride\library\orm\OrmManager $orm Instance of the ORM
+     * @param string $locale Code of the locale
+     * @param string $folder Id or slug of the folder
+     * @return null
+     */
+    protected function processSort(OrmManager $orm, $locale, $folder = null, array $data) {
+        $folderModel = $orm->getAssetFolderModel();
+
+        $folder = $folderModel->getFolder($folder, $locale);
+        if (!$folder) {
+            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+
+            return false;
+        }
+
+        $assetModel = $orm->getAssetModel();
+
+        $folderModel->orderFolder($folder, $data['order']);
+        $assetModel->orderFolder($folder, $data['order']);
+
+        return true;
     }
 
     /**
@@ -245,7 +392,7 @@ class AssetController extends AbstractController {
     }
 
     /**
-     * Action to order the items of a folder
+     * Action to manually order the subfolders of a folder
      * @param \ride\library\orm\OrmManager $orm Instance of the ORM
      * @param string $locale Code of the locale
      * @param string $folder Id or slug of the folder
@@ -262,78 +409,21 @@ class AssetController extends AbstractController {
 
                 return;
             }
-        } else {
-            $folder = $folderModel->createEntry();
         }
 
-        $index = $this->request->getBodyParameter('index', 1);
+        $folders = array();
+
         $order = $this->request->getBodyParameter('order');
-
-        foreach ($order as $item) {
-            if ($item['type'] == 'folder') {
-                $folder = $folderModel->createProxy($item['id']);
-                $folder->setOrderIndex($index);
-
-                $folderModel->save($folder);
-            } else {
-                $asset = $assetModel->createProxy($item['id']);
-                $asset->setOrderIndex($index);
-
-                $assetModel->save($asset);
-            }
-
-            $index++;
-        }
-    }
-
-    /**
-     * Action to process bulk actions on the items of a folder
-     * @param \ride\library\orm\OrmManager $orm Instance of the ORM
-     * @param string $locale Code of the locale
-     * @param string $folder Id or slug of the folder
-     * @return null
-     */
-    public function folderBulkAction(OrmManager $orm, $locale, $folder) {
-        $assetModel = $orm->getAssetModel();
-        $folderModel = $orm->getAssetFolderModel();
-
-        $folder = $folderModel->getFolder($folder);
-        if (!$folder) {
-            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
-
-            return;
+        foreach ($order as $folder) {
+            $folders[] = $folderModel->createProxy($folder);
         }
 
-        $action = $this->request->getBodyParameter('action');
-        if ($action == 'delete') {
-            $children = $this->request->getBodyParameter('folders');
-            if ($children) {
-                foreach ($children as $childId) {
-                    $child = $folderModel->getById($childId, $locale);
-                    if (!$child) {
-                        continue;
-                    }
+        $limit = $this->request->getBodyParameter('limit', 24);
+        $page = $this->request->getBodyParameter('page', 1);
 
-                    $folderModel->delete($child);
-                }
-            }
+        $index = ($page - 1) * $limit;
 
-            $assets = $this->request->getBodyParameter('assets');
-            if ($assets) {
-                foreach ($assets as $assetId) {
-                    $asset = $assetModel->getById($assetId, $locale);
-                    if (!$asset) {
-                        continue;
-                    }
-
-                    $assetModel->delete($asset);
-                }
-            }
-        }
-
-        $referer = $this->getFolderReferer($folder, $locale);
-
-        $this->response->setRedirect($referer);
+        $folderModel->order($folders, $index);
     }
 
     /**
@@ -504,6 +594,72 @@ class AssetController extends AbstractController {
         ));
 
         $form->processView($view);
+    }
+
+
+    /**
+     * Action to manually order the assets of a folder
+     * @param \ride\library\orm\OrmManager $orm Instance of the ORM
+     * @param string $locale Code of the locale
+     * @param string $folder Id or slug of the folder
+     * @return null
+     */
+    public function assetSortAction(OrmManager $orm, $locale, $folder = null) {
+        $folderModel = $orm->getAssetFolderModel();
+
+        // resolve folder
+        if ($folder) {
+
+            $folder = $folderModel->getFolder($folder, $locale);
+            if (!$folder) {
+                $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+
+                return;
+            }
+        } else {
+            $folder = $folderModel->createEntry();
+        }
+
+        // gather assets to order
+        $assetModel = $orm->getAssetModel();
+        $assets = array();
+
+        $order = $this->request->getBodyParameter('order');
+        foreach ($order as $asset) {
+            $assets[] = $assetModel->createProxy($asset);
+        }
+
+        // calculate starting index
+        $limit = $this->request->getBodyParameter('limit', 24);
+        $page = $this->request->getBodyParameter('page', 1);
+
+        $numFolders = $folderModel->countFolders($folder, $locale, true);
+
+        $folderPages = ceil($numFolders / $limit);
+        if ($page < $folderPages) {
+            $this->response->setStatusCode(Response::STATUS_CODE_BAD_REQUEST);
+
+            return;
+        }
+
+        if ($page == $folderPages) {
+            $index = 1;
+        } else {
+            $page -= $folderPages;
+
+            $offset = $numFolders % $limit;
+            if ($offset) {
+                $page++;
+            }
+
+            $index = 1 + (($page - 1) * $limit);
+            if ($page !== 1 && $offset) {
+                $index -= $offset;
+            }
+        }
+
+        // perform order
+        $assetModel->order($assets, $index);
     }
 
     /**
