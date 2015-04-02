@@ -124,7 +124,6 @@ class AssetController extends AbstractController {
             $url = $this->request->getUrl();
 
             $data = $form->getData();
-            k($data);
             switch ($data['submit']) {
                 case 'limit':
                     $limit = $data['limit'];

@@ -361,7 +361,7 @@ class AssetModel extends GenericModel {
      * @param string $order Name of the order algorithm
      * @return null
      */
-    public function orderFolder(AssetFolderEntry $parent = null, $order = self::ORDER_RESYNC) {
+    public function orderFolder(AssetFolderEntry $parent = null, $order = AssetFolderModel::ORDER_RESYNC) {
         $index = 1;
         $ordered = array();
 
