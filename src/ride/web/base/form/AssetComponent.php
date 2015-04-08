@@ -40,7 +40,7 @@ class AssetComponent extends AbstractComponent {
      * @return string|null A string for a data class, null for an array
      */
     public function getDataType() {
-        return 'ride\web\base\asset\AssetEntry';
+        return 'ride\application\orm\asset\entry\AssetEntry';
     }
 
     /**

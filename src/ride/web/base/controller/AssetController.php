@@ -3,10 +3,7 @@
 namespace ride\web\base\controller;
 
 use ride\library\html\Pagination;
-use ride\library\http\Response;
 use ride\library\i18n\I18n;
-use ride\library\image\ImageFactory;
-use ride\library\media\MediaFactory;
 use ride\library\orm\OrmManager;
 use ride\library\system\file\browser\FileBrowser;
 use ride\library\validation\exception\ValidationException;
@@ -41,7 +38,7 @@ class AssetController extends AbstractController {
         try {
             $locale = $i18n->getLocale($locale)->getCode();
         } catch (LocaleNotFoundException $exception) {
-            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+            $this->response->setNotFound();
 
             return;
         }
@@ -168,7 +165,7 @@ class AssetController extends AbstractController {
         // fetch folder
         $folder = $folderModel->getFolder($folder, $locale, true);
         if (!$folder) {
-            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+            $this->response->setNotFound();
 
             return;
         }
@@ -258,7 +255,7 @@ class AssetController extends AbstractController {
 
         $folder = $folderModel->getFolder($folder);
         if (!$folder) {
-            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+            $this->response->setNotFound();
 
             return false;
         }
@@ -308,7 +305,7 @@ class AssetController extends AbstractController {
 
         $folder = $folderModel->getFolder($folder, $locale);
         if (!$folder) {
-            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+            $this->response->setNotFound();
 
             return false;
         }
@@ -336,7 +333,7 @@ class AssetController extends AbstractController {
         if ($folder) {
             $folder = $folderModel->getFolder($folder, $locale, true);
             if (!$folder) {
-                $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+                $this->response->setNotFound();
 
                 return;
             }
@@ -404,7 +401,7 @@ class AssetController extends AbstractController {
         if ($folder) {
             $folder = $folderModel->getFolder($folder, $locale);
             if (!$folder) {
-                $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+                $this->response->setNotFound();
 
                 return;
             }
@@ -432,7 +429,7 @@ class AssetController extends AbstractController {
 
         $folder = $folderModel->getFolder($folder);
         if (!$folder) {
-            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+            $this->response->setNotFound();
 
             return;
         }
@@ -487,7 +484,7 @@ class AssetController extends AbstractController {
         $assetModel = $orm->getAssetModel();
         $asset = $assetModel->getById($asset);
         if (!$asset) {
-            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+            $this->response->setNotFound();
 
             return;
         }
@@ -500,7 +497,7 @@ class AssetController extends AbstractController {
 
         $file = $fileBrowser->getFile($asset->getValue());
         if (!$file) {
-            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+            $this->response->setNotFound();
 
             return;
         }
@@ -525,7 +522,7 @@ class AssetController extends AbstractController {
         if ($asset) {
             $asset = $assetModel->getById($asset, $locale, true);
             if (!$asset) {
-                $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+                $this->response->setNotFound();
 
                 return;
             }
@@ -606,7 +603,7 @@ class AssetController extends AbstractController {
 
             $folder = $folderModel->getFolder($folder, $locale);
             if (!$folder) {
-                $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+                $this->response->setNotFound();
 
                 return;
             }
@@ -639,7 +636,7 @@ class AssetController extends AbstractController {
 
         $asset = $assetModel->getById($asset, $locale);
         if (!$asset) {
-            $this->response->setStatusCode(Response::STATUS_CODE_NOT_FOUND);
+            $this->response->setNotFound();
 
             return;
         }

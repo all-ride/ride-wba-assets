@@ -92,37 +92,6 @@ class AssetsRow extends AbstractRow implements HtmlRow {
         $this->data = $data;
     }
 
-    protected function setWidgetValue() {
-        if (!$this->widget) {
-            return;
-        }
-
-        $assetModel = $this->orm->getAssetModel();
-        $locale = $this->getLocale();
-
-        $value = array();
-        $assets = array();
-
-        if ($this->data) {
-            if ($this->isMultiple()) {
-                foreach ($this->data as $asset) {
-                    $assetId = $asset->getId();
-
-                    $value[$assetId] = $assetId;
-                    $assets[$assetId] = $assetModel->createProxy($assetId, $locale);
-                }
-            } else {
-                $assetId = $this->data->getId();
-
-                $value[] = $assetId;
-                $assets[$assetId] = $assetModel->createProxy($assetId, $locale);
-            }
-        }
-
-        $this->widget->setValue(implode(',', $value));
-        $this->widget->setAssets($assets);
-    }
-
     /**
      * Performs necessairy build actions for this row
      * @param string $namePrefix Prefix for the row name
@@ -169,6 +138,41 @@ class AssetsRow extends AbstractRow implements HtmlRow {
         $this->setWidgetValue();
 
         $this->orm = null;
+    }
+
+    /**
+     * Sets the value of the row to the widget
+     * @return null
+     */
+    protected function setWidgetValue() {
+        if (!$this->widget) {
+            return;
+        }
+
+        $assetModel = $this->orm->getAssetModel();
+        $locale = $this->getLocale();
+
+        $value = array();
+        $assets = array();
+
+        if ($this->data) {
+            if ($this->isMultiple()) {
+                foreach ($this->data as $asset) {
+                    $assetId = $asset->getId();
+
+                    $value[$assetId] = $assetId;
+                    $assets[$assetId] = $assetModel->createProxy($assetId, $locale);
+                }
+            } else {
+                $assetId = $this->data->getId();
+
+                $value[] = $assetId;
+                $assets[$assetId] = $assetModel->createProxy($assetId, $locale);
+            }
+        }
+
+        $this->widget->setValue(implode(',', $value));
+        $this->widget->setAssets($assets);
     }
 
     /**
