@@ -517,6 +517,7 @@ class AssetController extends AbstractController {
     public function assetFormAction(I18n $i18n, OrmManager $orm, AssetComponent $assetComponent, $locale, $asset = null) {
         $folderModel = $orm->getAssetFolderModel();
         $assetModel = $orm->getAssetModel();
+        $styleModel = $orm->getImageStyleModel();
         $dimension = null;
 
         if ($asset) {
@@ -541,14 +542,57 @@ class AssetController extends AbstractController {
 
         $media = $asset->isUrl() ? $assetModel->getMediaFactory()->createMediaItem($asset->value) : NULL;
         $referer = $this->getAssetReferer($asset, $locale);
+        $styles = $styleModel->find();
 
-        $form = $this->buildForm($assetComponent, $asset);
+        $data = array(
+            'asset' => $asset,
+        );
+
+        foreach ($styles as $style) {
+            $data['style-' . $style->getSlug()] = $asset->getStyleImage($style->getSlug());
+        }
+
+        $form = $this->createFormBuilder($data);
+        $form->addRow('asset', 'component', array(
+            'component' => $assetComponent,
+            'embed' => true,
+        ));
+        foreach ($styles as $style) {
+            $form->addRow('style-' . $style->getSlug(), 'image', array(
+                'path' => $assetComponent->getDirectory(),
+            ));
+        }
+        $form = $form->build();
+
         if ($form->isSubmitted()) {
             try {
                 $form->validate();
 
-                $asset = $form->getData();
+                $data = $form->getData();
+                $asset = $data['asset'];
                 $asset->setLocale($locale);
+
+                $assetStyleModel = $orm->getAssetImageStyleModel();
+
+                foreach ($styles as $style) {
+                    $image = $data['style-' . $style->getSlug()];
+                    $assetStyle = $asset->getStyle($style->getSlug());
+
+                    if ($image) {
+                        if (!$assetStyle) {
+                            // style addition
+                            $assetStyle = $assetStyleModel->createEntry();
+                            $assetStyle->setStyle($style);
+
+                            $asset->addToStyles($assetStyle);
+                        }
+
+                        $assetStyle->setImage($image);
+                    } elseif ($assetStyle) {
+                        // style removal
+                        $asset->removeFromStyles($assetStyle);
+                    }
+                }
 
                 $assetModel->save($asset);
 
@@ -575,6 +619,7 @@ class AssetController extends AbstractController {
         $view = $this->setTemplateView('assets/asset', array(
             'form' => $form->getView(),
             'folder' => $folder,
+            'styles' => $styles,
             'asset' => $asset,
             'embed' => $embed,
             'referer' => $referer,

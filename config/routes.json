@@ -82,6 +82,21 @@
             "controller": "ride\\web\\base\\controller\\AssetController",
             "action": "assetDeleteAction",
             "id": "assets.asset.delete"
+        },
+        {
+            "path": "/admin/image-styles",
+            "controller": "ride\\web\\orm\\controller\\BuilderController",
+            "action": "scaffoldAction",
+            "id": "assets.image.styles",
+            "arguments": [
+                {
+                    "name": "model",
+                    "type": "scalar",
+                    "properties": {
+                        "value": "ImageStyle"
+                    }
+                }
+            ]
         }
     ]
 }

@@ -36,6 +36,14 @@ class AssetComponent extends AbstractComponent {
     }
 
     /**
+     * Gets the upload directory
+     * @return \ride\library\system\file\File
+     */
+    public function getDirectory() {
+        return $this->directory;
+    }
+
+    /**
      * Gets the data type for the data of this form component
      * @return string|null A string for a data class, null for an array
      */
@@ -55,9 +63,8 @@ class AssetComponent extends AbstractComponent {
         $isUrl = $data->isUrl();
 
         $data = array(
-            'name' => $data->name,
-            'description' => $data->description,
-            'thumbnail' => $data->thumbnail,
+            'name' => $data->getName(),
+            'description' => $data->getDescription(),
             'resource' => $isUrl ? 'url' : 'file',
             'file' => !$isUrl ? $value : '',
             'url' => $isUrl ? $value : '',
@@ -76,7 +83,6 @@ class AssetComponent extends AbstractComponent {
 
         $asset->setName($data['name']);
         $asset->setDescription($data['description']);
-        $asset->SetThumbnail($data['thumbnail']);
 
         if ($data['resource'] == 'url' && isset($data['url'])) {
             $asset->setValue($data['url']);
@@ -134,10 +140,6 @@ class AssetComponent extends AbstractComponent {
         ));
         $builder->addRow('description', 'wysiwyg', array(
             'label' => $translator->translate('label.description'),
-        ));
-        $builder->addRow('thumbnail', 'image', array(
-            'label' => $translator->translate('label.thumbnail'),
-            'path' => $this->directory,
         ));
 
         $requiredValidator = $this->validationFactory->createValidator('required', array());
