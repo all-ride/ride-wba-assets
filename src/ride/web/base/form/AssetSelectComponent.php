@@ -42,7 +42,7 @@ class AssetSelectComponent extends AbstractComponent {
      * @return string|null A string for a data class, null for an array
      */
     public function getDataType() {
-        return 'ride\web\base\asset\AssetEntry';
+        return 'ride\application\orm\entry\AssetEntry';
     }
 
     /**
@@ -72,7 +72,6 @@ class AssetSelectComponent extends AbstractComponent {
     public function prepareForm(FormBuilder $builder, array $options) {
         $translator = $options['translator'];
         $asset = $options['data'];
-
         $builder->addRow('asset', 'object', array(
             'label' => $translator->translate('label.asset'),
             'options' => $this->assetModel->find(null, $this->locale),
