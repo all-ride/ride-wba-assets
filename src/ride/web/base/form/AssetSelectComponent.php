@@ -42,8 +42,7 @@ class AssetSelectComponent extends AbstractComponent {
      * @return string|null A string for a data class, null for an array
      */
     public function getDataType() {
-        return 'ride\application\orm\entry\proxy\AssetEntryProxy';
-        //return 'ride\web\base\asset\AssetEntryProxy';
+        return 'ride\application\orm\entry\AssetEntry';
     }
 
     /**
