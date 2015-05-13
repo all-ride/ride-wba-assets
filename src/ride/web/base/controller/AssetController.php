@@ -567,7 +567,6 @@ class AssetController extends AbstractController {
         if ($form->isSubmitted()) {
             try {
                 $form->validate();
-
                 $data = $form->getData();
                 $asset = $data['asset'];
                 $asset->setLocale($locale);
