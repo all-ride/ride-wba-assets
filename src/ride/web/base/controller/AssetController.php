@@ -632,6 +632,95 @@ class AssetController extends AbstractController {
     }
 
 
+
+
+    /**
+     * Action to upload an asset
+     * @param \ride\library\i18n\I18n $i18n Instance of I18n
+     * @param \ride\library\orm\OrmManager $orm
+     * @param \ride\web\cms\form\AssetComponent
+     * @param string $locale
+     * @param string $asset
+     * @return null
+     */
+    public function uploadAssetAction(I18n $i18n, OrmManager $orm, AssetComponent $assetComponent, $locale) {
+        $view = array();
+
+        $assetModel = $orm->getAssetModel();
+        $folderModel = $orm->getAssetFolderModel();
+        $styleModel = $orm->getImageStyleModel();
+        $asset = $assetModel->createEntry();
+        $styles = $styleModel->find();
+
+        $folder = $this->request->getQueryParameter('folder');
+        if ($folder) {
+            $folder = $folderModel->createProxy($folder, $locale);
+            $asset->setFolder($folder);
+        }
+
+        $data = array('asset' => $asset);
+
+        foreach ($styles as $style) {
+            $data['style-' . $style->getSlug()] = $asset->getStyleImage($style->getSlug());
+        }
+
+        $form = $this->createFormBuilder($data);
+        $form->addRow('asset', 'component', array(
+            'component' => $assetComponent,
+            'embed' => true,
+        ));
+        foreach ($styles as $style) {
+            $form->addRow('style-' . $style->getSlug(), 'image', array(
+                'path' => $assetComponent->getDirectory(),
+            ));
+        }
+        $form = $form->build();
+
+        if ($form->isSubmitted()) {
+            try {
+                $form->validate();
+                $data = $form->getData();
+                $asset = $data['asset'];
+                $asset->setLocale($locale);
+
+                $assetStyleModel = $orm->getAssetImageStyleModel();
+
+                foreach ($styles as $style) {
+                    $image = $data['style-' . $style->getSlug()];
+                    $assetStyle = $asset->getStyle($style->getSlug());
+
+                    if ($image) {
+                        if (!$assetStyle) {
+                            // style addition
+                            $assetStyle = $assetStyleModel->createEntry();
+                            $assetStyle->setStyle($style);
+
+                            $asset->addToStyles($assetStyle);
+                        }
+
+                        $assetStyle->setImage($image);
+                    } elseif ($assetStyle) {
+                        // style removal
+                        $asset->removeFromStyles($assetStyle);
+                    }
+                }
+
+                $assetModel->save($asset);
+                $view['id'] = $asset->getId();
+                $view['thumbnail'] = $asset->getThumbnail();
+                $view['name'] = $asset->getName();
+
+                header('Content-Type: application/json');
+                echo json_encode($view);
+                return;
+            } catch (ValidationException $exception) {
+                echo json_encode('Something went wrong');
+                return;
+            }
+        }
+        return;
+    }
+
     /**
      * Action to manually order the assets of a folder
      * @param \ride\library\orm\OrmManager $orm Instance of the ORM

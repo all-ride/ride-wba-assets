@@ -71,6 +71,12 @@
             "id": "assets.asset.add"
         },
         {
+            "path": "/admin/assets/%locale%/items/upload",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "uploadAssetAction",
+            "id": "assets.asset.upload"
+        },
+        {
             "path": "/admin/assets/%locale%/items/%asset%/edit/",
             "controller": "ride\\web\\base\\controller\\AssetController",
             "action": "assetFormAction",
