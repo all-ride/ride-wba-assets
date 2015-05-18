@@ -631,9 +631,6 @@ class AssetController extends AbstractController {
         $form->processView($view);
     }
 
-
-
-
     /**
      * Action to upload an asset
      * @param \ride\library\i18n\I18n $i18n Instance of I18n
@@ -706,15 +703,33 @@ class AssetController extends AbstractController {
                 }
 
                 $assetModel->save($asset);
-                $view['id'] = $asset->getId();
-                $view['thumbnail'] = $asset->getThumbnail();
-                $view['name'] = $asset->getName();
 
-                header('Content-Type: application/json');
-                echo json_encode($view);
-                return;
+                $embed = $this->request->getQueryParameter('embed', false);
+                $media = $asset->isUrl() ? $assetModel->getMediaFactory()->createMediaItem($asset->value) : NULL;
+                $dimension = null;
+                if ($asset->isImage()) {
+                    $file = $assetModel->getFileBrowser()->getFile($asset->getValue());
+
+                    $image = $assetModel->getImageFactory()->createImage();
+                    $image->read($file);
+
+                    $dimension = $image->getDimension();
+                }
+                $view = $this->setTemplateView('assets/detail', array(
+                    'item' => $asset,
+                    'folder' => $folder,
+                    'styles' => $styles,
+                    'embed' => $embed,
+                    'media' => $media,
+                    'dimension' => $dimension,
+                    'locales' => $i18n->getLocaleCodeList(),
+                    'locale' => $locale,
+                ));
+
+                $form->processView($view);
             } catch (ValidationException $exception) {
-                echo json_encode('Something went wrong');
+                $view = $this->setTemplateView('assets/error', array());
+                $form->processView($view);
                 return;
             }
         }
