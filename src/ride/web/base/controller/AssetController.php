@@ -564,6 +564,17 @@ class AssetController extends AbstractController {
         }
         $form = $form->build();
 
+        $dimension = null;
+        if ($asset->isImage()) {
+            $file = $assetModel->getFileBrowser()->getFile($asset->getValue());
+
+            $image = $assetModel->getImageFactory()->createImage();
+            $image->read($file);
+
+            $dimension = $image->getDimension();
+        }
+        $embed = $this->request->getQueryParameter('embed', false);
+
         if ($form->isSubmitted()) {
             try {
                 $form->validate();
@@ -595,6 +606,21 @@ class AssetController extends AbstractController {
 
                 $assetModel->save($asset);
 
+                // if ajax request
+                if ($this->request->isXmlHttpRequest()) {
+                    $this->setTemplateView('assets/detail', array(
+                        'item' => $asset,
+                        'folder' => $folder,
+                        'styles' => $styles,
+                        'embed' => $embed,
+                        'media' => $media,
+                        'dimension' => $dimension,
+                        'locales' => $i18n->getLocaleCodeList(),
+                        'locale' => $locale,
+                    ));
+                    return;
+                }
+
                 $this->response->setRedirect($referer);
 
                 return;
@@ -602,18 +628,6 @@ class AssetController extends AbstractController {
                 $this->setValidationException($exception, $form);
             }
         }
-
-        $dimension = null;
-        if ($asset->isImage()) {
-            $file = $assetModel->getFileBrowser()->getFile($asset->getValue());
-
-            $image = $assetModel->getImageFactory()->createImage();
-            $image->read($file);
-
-            $dimension = $image->getDimension();
-        }
-
-        $embed = $this->request->getQueryParameter('embed', false);
 
         $view = $this->setTemplateView('assets/asset', array(
             'form' => $form->getView(),
@@ -629,111 +643,6 @@ class AssetController extends AbstractController {
         ));
 
         $form->processView($view);
-    }
-
-    /**
-     * Action to upload an asset
-     * @param \ride\library\i18n\I18n $i18n Instance of I18n
-     * @param \ride\library\orm\OrmManager $orm
-     * @param \ride\web\cms\form\AssetComponent
-     * @param string $locale
-     * @param string $asset
-     * @return null
-     */
-    public function uploadAssetAction(I18n $i18n, OrmManager $orm, AssetComponent $assetComponent, $locale) {
-        $view = array();
-
-        $assetModel = $orm->getAssetModel();
-        $folderModel = $orm->getAssetFolderModel();
-        $styleModel = $orm->getImageStyleModel();
-        $asset = $assetModel->createEntry();
-        $styles = $styleModel->find();
-
-        $folder = $this->request->getQueryParameter('folder');
-        if ($folder) {
-            $folder = $folderModel->createProxy($folder, $locale);
-            $asset->setFolder($folder);
-        }
-
-        $data = array('asset' => $asset);
-
-        foreach ($styles as $style) {
-            $data['style-' . $style->getSlug()] = $asset->getStyleImage($style->getSlug());
-        }
-
-        $form = $this->createFormBuilder($data);
-        $form->addRow('asset', 'component', array(
-            'component' => $assetComponent,
-            'embed' => true,
-        ));
-        foreach ($styles as $style) {
-            $form->addRow('style-' . $style->getSlug(), 'image', array(
-                'path' => $assetComponent->getDirectory(),
-            ));
-        }
-        $form = $form->build();
-
-        if ($form->isSubmitted()) {
-            try {
-                $form->validate();
-                $data = $form->getData();
-                $asset = $data['asset'];
-                $asset->setLocale($locale);
-
-                $assetStyleModel = $orm->getAssetImageStyleModel();
-
-                foreach ($styles as $style) {
-                    $image = $data['style-' . $style->getSlug()];
-                    $assetStyle = $asset->getStyle($style->getSlug());
-
-                    if ($image) {
-                        if (!$assetStyle) {
-                            // style addition
-                            $assetStyle = $assetStyleModel->createEntry();
-                            $assetStyle->setStyle($style);
-
-                            $asset->addToStyles($assetStyle);
-                        }
-
-                        $assetStyle->setImage($image);
-                    } elseif ($assetStyle) {
-                        // style removal
-                        $asset->removeFromStyles($assetStyle);
-                    }
-                }
-
-                $assetModel->save($asset);
-
-                $embed = $this->request->getQueryParameter('embed', false);
-                $media = $asset->isUrl() ? $assetModel->getMediaFactory()->createMediaItem($asset->value) : NULL;
-                $dimension = null;
-                if ($asset->isImage()) {
-                    $file = $assetModel->getFileBrowser()->getFile($asset->getValue());
-
-                    $image = $assetModel->getImageFactory()->createImage();
-                    $image->read($file);
-
-                    $dimension = $image->getDimension();
-                }
-                $view = $this->setTemplateView('assets/detail', array(
-                    'item' => $asset,
-                    'folder' => $folder,
-                    'styles' => $styles,
-                    'embed' => $embed,
-                    'media' => $media,
-                    'dimension' => $dimension,
-                    'locales' => $i18n->getLocaleCodeList(),
-                    'locale' => $locale,
-                ));
-
-                $form->processView($view);
-            } catch (ValidationException $exception) {
-                $view = $this->setTemplateView('assets/error', array());
-                $form->processView($view);
-                return;
-            }
-        }
-        return;
     }
 
     /**
