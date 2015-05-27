@@ -482,7 +482,13 @@ class AssetController extends AbstractController {
      */
     public function assetValueAction(OrmManager $orm, FileBrowser $fileBrowser, $asset) {
         $assetModel = $orm->getAssetModel();
-        $asset = $assetModel->getById($asset);
+
+        if (is_numeric($asset)) {
+            $asset = $assetModel->getById($asset);
+        } else {
+            $asset = $assetModel->getBy(array('filter' => array('slug' => $asset)));
+        }
+
         if (!$asset) {
             $this->response->setNotFound();
 
