@@ -524,8 +524,8 @@ class AssetController extends AbstractController {
         $folderModel = $orm->getAssetFolderModel();
         $assetModel = $orm->getAssetModel();
         $styleModel = $orm->getImageStyleModel();
-        $dimension = null;
 
+        // prepare or lookup asset
         if ($asset) {
             $asset = $assetModel->getById($asset, $locale, true);
             if (!$asset) {
@@ -548,16 +548,19 @@ class AssetController extends AbstractController {
 
         $media = $asset->isUrl() ? $assetModel->getMediaFactory()->createMediaItem($asset->value) : NULL;
         $referer = $this->getAssetReferer($asset, $locale);
-        $styles = $styleModel->find();
+        $embed = $this->request->getQueryParameter('embed', false);
 
+        // prepare form data
         $data = array(
             'asset' => $asset,
         );
 
+        $styles = $styleModel->find();
         foreach ($styles as $style) {
             $data['style-' . $style->getSlug()] = $asset->getStyleImage($style->getSlug());
         }
 
+        // create form
         $form = $this->createFormBuilder($data);
         $form->addRow('asset', 'component', array(
             'component' => $assetComponent,
@@ -570,11 +573,13 @@ class AssetController extends AbstractController {
         }
         $form = $form->build();
 
+        // process form
         if ($form->isSubmitted()) {
             try {
                 $form->validate();
 
                 $data = $form->getData();
+
                 $asset = $data['asset'];
                 $asset->setLocale($locale);
 
@@ -602,25 +607,24 @@ class AssetController extends AbstractController {
 
                 $assetModel->save($asset);
 
-                $this->response->setRedirect($referer);
+                if ($this->request->isXmlHttpRequest()) {
+                    // ajax request
+                    $this->setTemplateView('assets/detail', array(
+                        'item' => $asset,
+                        'embed' => $embed,
+                        'referer' => $referer,
+                        'locale' => $locale,
+                    ));
+                } else {
+                    // regular client
+                    $this->response->setRedirect($referer);
+                }
 
                 return;
             } catch (ValidationException $exception) {
                 $this->setValidationException($exception, $form);
             }
         }
-
-        $dimension = null;
-        if ($asset->isImage()) {
-            $file = $assetModel->getFileBrowser()->getFile($asset->getValue());
-
-            $image = $assetModel->getImageFactory()->createImage();
-            $image->read($file);
-
-            $dimension = $image->getDimension();
-        }
-
-        $embed = $this->request->getQueryParameter('embed', false);
 
         $view = $this->setTemplateView('assets/asset', array(
             'form' => $form->getView(),
@@ -630,14 +634,13 @@ class AssetController extends AbstractController {
             'embed' => $embed,
             'referer' => $referer,
             'media' => $media,
-            'dimension' => $dimension,
+            'dimension' => $assetModel->getDimension($asset),
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
         ));
 
         $form->processView($view);
     }
-
 
     /**
      * Action to manually order the assets of a folder
