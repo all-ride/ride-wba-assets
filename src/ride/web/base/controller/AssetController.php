@@ -4,6 +4,7 @@ namespace ride\web\base\controller;
 
 use ride\library\html\Pagination;
 use ride\library\i18n\I18n;
+use ride\library\media\exception\UnsupportedMediaException;
 use ride\library\orm\OrmManager;
 use ride\library\system\file\browser\FileBrowser;
 use ride\library\validation\exception\ValidationException;
@@ -546,9 +547,17 @@ class AssetController extends AbstractController {
             }
         }
 
-        $media = $asset->isUrl() ? $assetModel->getMediaFactory()->createMediaItem($asset->value) : NULL;
+        $media = null;
         $referer = $this->getAssetReferer($asset, $locale);
         $styles = $styleModel->find();
+
+        if ($asset->isUrl()) {
+            try {
+                $media = $assetModel->getMediaFactory()->createMediaItem($asset->value);
+            } catch (UnsupportedMediaException $exception) {
+
+            }
+        }
 
         $data = array(
             'asset' => $asset,
