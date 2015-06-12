@@ -551,9 +551,6 @@ class AssetController extends AbstractController {
         $referer = $this->getAssetReferer($asset, $locale);
         $embed = $this->request->getQueryParameter('embed', false);
 
-<<<<<<< HEAD
-        // prepare form data
-=======
         if ($asset->isUrl()) {
             try {
                 $media = $assetModel->getMediaFactory()->createMediaItem($asset->value);
@@ -562,7 +559,7 @@ class AssetController extends AbstractController {
             }
         }
 
->>>>>>> release/0.5.3
+
         $data = array(
             'asset' => $asset,
         );
