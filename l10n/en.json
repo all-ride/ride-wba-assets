@@ -10,6 +10,7 @@
     "label.assets": "Assets",
     "label.asset": "Asset",
     "label.confirm.asset.delete": "Are you sure you want to delete %name%?",
+    "label.copyright": "Copyright",
     "label.dates.all": "All dates",
     "label.description": "Description",
 	"label.dimension": "Dimensions",
