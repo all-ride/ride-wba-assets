@@ -65,6 +65,7 @@ class AssetComponent extends AbstractComponent {
         $data = array(
             'name' => $data->getName(),
             'description' => $data->getDescription(),
+            'copyright' => $data->getCopyright(),
             'resource' => $isUrl ? 'url' : 'file',
             'file' => !$isUrl ? $value : '',
             'url' => $isUrl ? $value : '',
@@ -83,6 +84,7 @@ class AssetComponent extends AbstractComponent {
 
         $asset->setName($data['name']);
         $asset->setDescription($data['description']);
+        $asset->setCopyright($data['copyright']);
 
         if ($data['resource'] == 'url' && isset($data['url'])) {
             $asset->setValue($data['url']);
@@ -140,6 +142,12 @@ class AssetComponent extends AbstractComponent {
         ));
         $builder->addRow('description', 'wysiwyg', array(
             'label' => $translator->translate('label.description'),
+        ));
+        $builder->addRow('copyright', 'string', array(
+            'label' => $translator->translate('label.copyright'),
+            'filters' => array(
+                'trim' => array(),
+            )
         ));
 
         $requiredValidator = $this->validationFactory->createValidator('required', array());
