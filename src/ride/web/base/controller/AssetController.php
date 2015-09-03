@@ -28,7 +28,7 @@ class AssetController extends AbstractController {
     public function indexAction(I18n $i18n, OrmManager $orm, $locale = null, $folder = null) {
         // force a locale
         if (!$locale) {
-            $url = $this->getUrl('assets.overview.locale', array('locale' => $this->getLocale()));
+            $url = $this->getUrl('assets.overview.locale', array('locale' => $this->getContentLocale()));
 
             $this->response->setRedirect($url);
 
@@ -43,6 +43,8 @@ class AssetController extends AbstractController {
 
             return;
         }
+
+        $this->setContentLocale($locale);
 
         $folderModel = $orm->getAssetFolderModel();
         $assetModel = $orm->getAssetModel();
@@ -631,6 +633,7 @@ class AssetController extends AbstractController {
 
                 return;
             } catch (ValidationException $exception) {
+                k($exception->getErrorsAsString());
                 $this->setValidationException($exception, $form);
             }
         }
