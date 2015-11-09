@@ -4,9 +4,12 @@ namespace ride\service;
 
 use ride\application\orm\asset\entry\AssetEntry;
 use ride\application\orm\asset\model\AssetModel;
-use ride\application\orm\model\ImageStyleModel;
+
+use ride\library\orm\model\GenericModel;
 
 use ride\web\image\ImageUrlGenerator;
+
+use \Exception;
 
 /**
  * Service to work with assets
@@ -40,11 +43,11 @@ class AssetService {
     /**
      * Constructs a new asset service
      * @param \ride\application\orm\asset\model\AssetModel $assetModel
-     * @param \ride\application\orm\model\ImageStyleModel $imageStyleModel
+     * @param \ride\library\orm\model\GenericModel $imageStyleModel
      * @param \ride\web\image\ImageUrlGenerator $imageUrlGenerator
      * @return null
      */
-    public function __construct(AssetModel $assetModel, ImageStyleModel $imageStyleModel, ImageUrlGenerator $imageUrlGenerator) {
+    public function __construct(AssetModel $assetModel, GenericModel $imageStyleModel, ImageUrlGenerator $imageUrlGenerator) {
         $this->assetModel = $assetModel;
         $this->imageStyleModel = $imageStyleModel;
         $this->imageUrlGenerator = $imageUrlGenerator;
@@ -84,7 +87,7 @@ class AssetService {
             $image = $asset->getStyleImage($style);
             if ($image) {
                 // get url for the provided image
-                return $imageUrlGenerator->generateUrl($image);
+                return $this->imageUrlGenerator->generateUrl($image);
             }
         }
 
@@ -100,7 +103,7 @@ class AssetService {
         }
 
         // get url for the provided image
-        return $imageUrlGenerator->generateUrl($image, $transformations);
+        return $this->imageUrlGenerator->generateUrl($image, $transformations);
     }
 
     /**
