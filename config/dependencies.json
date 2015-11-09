@@ -1,6 +1,32 @@
 {
     "dependencies": [
         {
+            "class": "ride\\service\\AssetService",
+            "calls": [
+                {
+                    "method": "__construct",
+                    "arguments": [
+                        {
+                            "name": "assetModel",
+                            "type": "call",
+                            "properties": {
+                                "interface": "ride\\library\\orm\\OrmManager",
+                                "method": "getAssetModel"
+                            }
+                        },
+                        {
+                            "name": "imageStyleModel",
+                            "type": "call",
+                            "properties": {
+                                "interface": "ride\\library\\orm\\OrmManager",
+                                "method": "getImageStyleModel"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "interfaces": ["ride\\library\\form\\component\\Component", "ride\\web\\base\\form\\AssetComponent"],
             "class": "ride\\web\\base\\form\\AssetComponent",
             "id": "asset",

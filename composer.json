@@ -28,7 +28,8 @@
     },
     "autoload": {
         "psr-0": {
-            "ride\\web\\base\\": ["src/"]
+            "ride\\web\\base\\": ["src/"],
+            "ride\\service\\AssetService": ["src/"]
         }
     }
 }
