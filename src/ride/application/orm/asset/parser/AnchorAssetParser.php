@@ -9,7 +9,7 @@ use ride\service\AssetService;
 /**
  * Implementation to link an asset to the original resource
  */
-class AnchorClassParser extends GenericClassParser {
+class AnchorAssetParser extends GenericAssetParser {
 
     /**
      * Style class for the anchor tag
