@@ -28,8 +28,9 @@
     },
     "autoload": {
         "psr-0": {
-            "ride\\web\\base\\": ["src/"],
-            "ride\\service\\AssetService": ["src/"]
+            "ride\\application\\orm\\asset\\parser\\": ["src/"],
+            "ride\\service\\AssetService": ["src/"],
+            "ride\\web\\base\\": ["src/"]
         }
     }
 }
