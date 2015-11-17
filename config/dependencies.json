@@ -1,6 +1,11 @@
 {
     "dependencies": [
         {
+            "interfaces": "ride\\application\\orm\\asset\\parser\\AssetParser",
+            "class": "ride\\application\\orm\\asset\\parser\\GenericAssetParser",
+            "id": "default"
+        },
+        {
             "class": "ride\\service\\AssetService",
             "calls": [
                 {
@@ -20,6 +25,18 @@
                             "properties": {
                                 "interface": "ride\\library\\orm\\OrmManager",
                                 "method": "getImageStyleModel"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "method": "setAssetParsers",
+                    "arguments": [
+                        {
+                            "name": "assetParsers",
+                            "type": "dependencies",
+                            "properties": {
+                                "interface": "ride\\application\\orm\\asset\\parser\\AssetParser"
                             }
                         }
                     ]

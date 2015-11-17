@@ -4,6 +4,7 @@ namespace ride\service;
 
 use ride\application\orm\asset\entry\AssetEntry;
 use ride\application\orm\asset\model\AssetModel;
+use ride\application\orm\asset\parser\AssetParser;
 
 use ride\library\orm\model\GenericModel;
 
@@ -35,10 +36,22 @@ class AssetService {
     private $imageUrlGenerator;
 
     /**
-     * Loaded styles
+     * Loaded image styles
      * @var array
      */
-    private $styles;
+    private $imageStyles;
+
+    /**
+     * Loaded asset parsers
+     * @var array
+     */
+    private $assetParsers;
+
+    /**
+     * Default class to retrieve the asset parser without class
+     * @var string
+     */
+    private $defaultClass;
 
     /**
      * Constructs a new asset service
@@ -51,7 +64,82 @@ class AssetService {
         $this->assetModel = $assetModel;
         $this->imageStyleModel = $imageStyleModel;
         $this->imageUrlGenerator = $imageUrlGenerator;
-        $this->styles = array();
+        $this->imageStyles = array();
+        $this->assetParsers = array();
+        $this->defaultClass = null;
+    }
+
+    /**
+     * Sets the default class to retrieve the asset parser without class
+     * @param string $defaultClass Class name of the asset parser
+     * @return null
+     */
+    public function setDefaultClass($defaultClass) {
+        $this->defaultClass = $defaultClass;
+    }
+
+    /**
+     * Sets asset parsers to this service
+     * @param array $assetParsers Array with the class as key and the asset
+     * parser as value
+     * @return null
+     */
+    public function setAssetParsers(array $assetParsers) {
+        foreach ($classParsers as $class => $classParser) {
+            $this->setClassParser($class, $classParser);
+        }
+    }
+
+    /**
+     * Sets an asset class parser
+     * @param string $class Name of the class
+     * @param \ride\application\orm\asset\parser\AssetParser Instance of the
+     * Instance of the asset parser
+     * @return null
+     */
+    public function setAssetParser($class, AssetParser $classParser) {
+        $this->assetParsers[$class] = $classParser;
+
+        if ($this->defaultClass === null) {
+            $this->defaultClass = $class;
+        }
+    }
+
+    /**
+     * Gets a asset parser
+     * @param string $class Name of the class
+     * @return \ride\application\orm\asset\parser\AssetParser Instance of the
+     * asset parser
+     * @throws \Exception when no class parser set for the provided class
+     */
+    public function getAssetParser($class = null) {
+        if ($class === null) {
+            $class = $this->defaultClass;
+        }
+
+        if (!isset($this->assetParsers[$class])) {
+            throw new Exception('Could not get class parser: no parser set for ' . $class);
+        }
+
+        return $this->assetParsers[$class];
+    }
+
+    /**
+     * Gets the image style with the provided name
+     * @param string $style Name of the style
+     * @return \ride\application\orm\asset\entry\ImageStyleEntry
+     */
+    public function getImageStyle($style) {
+        if (isset($this->imageStyles[$style])) {
+            return $this->imageStyles[$style];
+        }
+
+        $this->imageStyles[$style] = $this->imageStyleModel->getBy(array('filter' => array('slug' => $style)));
+        if (!$this->imageStyles[$style]) {
+            throw new Exception('Could not load style ' . $style . ': style does not exist');
+        }
+
+        return $this->imageStyles[$style];
     }
 
     /**
@@ -107,21 +195,23 @@ class AssetService {
     }
 
     /**
-     * Gets the image style with the provided name
-     * @param string $style Name of the style
-     * @return \ride\application\orm\asset\entry\ImageStyleEntry
+     * Gets the HTML for an asset
+     * @param string|\ride\application\orm\asset\entry\AssetEntry $asset
+     * @param string $style Name of the style to apply
+     * @param string $class Class of the asset parser
+     * @return string|null
      */
-    public function getImageStyle($style) {
-        if (isset($this->styles[$style])) {
-            return $this->styles[$style];
+    public function getAssetHtml($asset, $style = null, $class = null) {
+        if (!$asset instanceof AssetEntry) {
+            $asset = $this->getAsset($asset);
+            if (!$asset) {
+                return null;
+            }
         }
 
-        $this->styles[$style] = $this->imageStyleModel->getBy(array('filter' => array('slug' => $style)));
-        if (!$this->styles[$style]) {
-            throw new Exception('Could not load style ' . $style . ': style does not exist');
-        }
+        $assetParser = $this->getAssetParser($class);
 
-        return $this->styles[$style];
+        return $assetParser->getAssetHtml($this, $asset, $style);
     }
 
 }
