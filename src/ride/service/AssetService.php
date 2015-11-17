@@ -85,20 +85,20 @@ class AssetService {
      * @return null
      */
     public function setAssetParsers(array $assetParsers) {
-        foreach ($classParsers as $class => $classParser) {
-            $this->setClassParser($class, $classParser);
+        foreach ($assetParsers as $class => $assetParser) {
+            $this->setAssetParser($class, $assetParser);
         }
     }
 
     /**
      * Sets an asset class parser
      * @param string $class Name of the class
-     * @param \ride\application\orm\asset\parser\AssetParser Instance of the
+     * @param \ride\application\orm\asset\parser\AssetParser $assetParser
      * Instance of the asset parser
      * @return null
      */
-    public function setAssetParser($class, AssetParser $classParser) {
-        $this->assetParsers[$class] = $classParser;
+    public function setAssetParser($class, AssetParser $assetParser) {
+        $this->assetParsers[$class] = $assetParser;
 
         if ($this->defaultClass === null) {
             $this->defaultClass = $class;
