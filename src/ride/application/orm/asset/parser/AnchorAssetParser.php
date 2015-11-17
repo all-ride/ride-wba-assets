@@ -56,6 +56,7 @@ class AnchorAssetParser extends GenericAssetParser {
         if ($this->anchorRelationship) {
             $anchor .= ' rel="' . $this->anchorRelationship . '"';
         }
+        $anchor .= '>';
         $anchor .= parent::getAssetHtml($assetService, $asset, $style);
         $anchor .= '</a>';
 
