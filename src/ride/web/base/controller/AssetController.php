@@ -9,6 +9,8 @@ use ride\library\orm\OrmManager;
 use ride\library\system\file\browser\FileBrowser;
 use ride\library\validation\exception\ValidationException;
 
+use ride\service\AssetService;
+
 use ride\web\base\controller\AbstractController;
 use ride\web\base\form\AssetComponent;
 
@@ -483,7 +485,7 @@ class AssetController extends AbstractController {
      * @param string $asset
      * @return null
      */
-    public function assetValueAction(OrmManager $orm, FileBrowser $fileBrowser, $asset) {
+    public function assetValueAction(OrmManager $orm, FileBrowser $fileBrowser, AssetService $assetService, $asset) {
         $assetModel = $orm->getAssetModel();
 
         if (is_numeric($asset)) {
@@ -498,20 +500,13 @@ class AssetController extends AbstractController {
             return;
         }
 
-        if ($asset->isUrl()) {
-            $this->response->setRedirect($asset->getValue());
-
-            return;
+        if (!$asset->isUrl()) {
+            $url = $assetService->getAssetUrl($asset, $this->request->getQueryParameter('style'));
+        } else {
+            $url = $asset->getValue();
         }
 
-        $file = $fileBrowser->getFile($asset->getValue());
-        if (!$file) {
-            $this->response->setNotFound();
-
-            return;
-        }
-
-        $this->setFileView($file);
+        $this->response->setRedirect($url);
     }
 
     /**
