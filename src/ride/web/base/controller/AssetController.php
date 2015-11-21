@@ -344,7 +344,14 @@ class AssetController extends AbstractController {
             }
         } else {
             $folder = $folderModel->createEntry();
-            $folder->setParent($this->request->getQueryParameter('folder', ''));
+
+            $parent = $this->request->getQueryParameter('folder');
+            if ($parent) {
+                $parent = $folderModel->getById($parent);
+                if ($parent) {
+                    $folder->setParent($parent->getPath());
+                }
+            }
         }
 
         $referer = $this->getFolderReferer($folder, $locale);
