@@ -49,6 +49,10 @@ class AnchorAssetParser extends GenericAssetParser {
      * @return string HTML for the provided asset
      */
     public function getAssetHtml(AssetService $assetService, AssetEntry $asset, $style = null) {
+        if (!$asset->isImage()) {
+            return parent::getAssetHtml($assetService, $asset, $style);
+        }
+
         $anchor = '<a href="' . $assetService->getAssetUrl($asset) . '"';
         if ($this->anchorClass) {
             $anchor .= ' class="' . $this->anchorClass . '"';

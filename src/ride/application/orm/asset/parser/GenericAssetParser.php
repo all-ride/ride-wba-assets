@@ -34,11 +34,19 @@ class GenericAssetParser implements AssetParser {
      * @return string HTML for the provided asset
      */
     public function getAssetHtml(AssetService $assetService, AssetEntry $asset, $style = null) {
-        $result = '<img src="' . $assetService->getAssetUrl($asset, $style) . '" title="' . htmlentities($asset->getName()) . '"';
-        if ($this->imageClass) {
-            $result .= ' class="' . $this->imageClass . '"';
+        if ($asset->isImage()) {
+            $result = '<img src="' . $assetService->getAssetUrl($asset, $style) . '" title="' . htmlentities($asset->getName()) . '"';
+            if ($this->imageClass) {
+                $result .= ' class="' . $this->imageClass . '"';
+            }
+            $result .= '>';
+        } elseif ($asset->isAudio()) {
+            $result = '<audio src="' . $assetService->getAssetUrl($asset) . '" controls></audio>';
+        } elseif ($asset->isVideo()) {
+            $result = '<video src="' . $assetService->getAssetUrl($asset) . '" controls></video>';
+        } else {
+            $result = '<a href="' . $assetService->getAssetUrl($asset) . '">' . $asset->getName() . '</a>';
         }
-        $result .= '>';
 
         return $result;
     }
