@@ -174,8 +174,11 @@ class AssetService {
         if ($style) {
             $image = $asset->getStyleImage($style);
             if ($image) {
+                // transform to the correct size
+                $transformations = $this->getImageStyle($style)->getSizeTransformationArray();
+
                 // get url for the provided image
-                return $this->imageUrlGenerator->generateUrl($image);
+                return $this->imageUrlGenerator->generateUrl($image, $transformations);
             }
         }
 
