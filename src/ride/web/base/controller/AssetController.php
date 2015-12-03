@@ -258,7 +258,7 @@ class AssetController extends AbstractController {
         $assetModel = $orm->getAssetModel();
         $folderModel = $orm->getAssetFolderModel();
 
-        $folder = $folderModel->getFolder($folder);
+        $folder = $folderModel->getFolder($folder, $locale, true);
         if (!$folder) {
             $this->response->setNotFound();
 
