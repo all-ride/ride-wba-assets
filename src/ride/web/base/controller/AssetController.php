@@ -244,6 +244,7 @@ class AssetController extends AbstractController {
             'urlSuffix' => $urlSuffix,
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
+            'maxFileSize' => (int) ini_get('post_max_size'),
         ));
     }
 
@@ -643,7 +644,6 @@ class AssetController extends AbstractController {
 
                 return;
             } catch (ValidationException $exception) {
-                k($exception->getErrorsAsString());
                 $this->setValidationException($exception, $form);
             }
         }
