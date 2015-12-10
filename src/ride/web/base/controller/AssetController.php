@@ -507,13 +507,21 @@ class AssetController extends AbstractController {
             return;
         }
 
-        if (!$asset->isUrl()) {
-            $url = $assetService->getAssetUrl($asset, $this->request->getQueryParameter('style'));
-        } else {
-            $url = $asset->getValue();
+        $url = $assetService->getAssetUrl($asset, $this->request->getQueryParameter('style'));
+        if ($url) {
+            $this->response->setRedirect($url);
+
+            return;
         }
 
-        $this->response->setRedirect($url);
+        $file = $fileBrowser->getFile($asset->getValue());
+        if (!$file) {
+            $this->response->setNotFound();
+
+            return;
+         }
+
+        $this->setFileView($file);
     }
 
     /**

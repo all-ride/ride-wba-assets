@@ -170,6 +170,12 @@ class AssetService {
             }
         }
 
+        if ($asset->isUrl()) {
+            return $asset->getValue();
+        } elseif (!$asset->isImage()) {
+            return null;
+        }
+
         // check for overriden style image
         if ($style) {
             $image = $asset->getStyleImage($style);
