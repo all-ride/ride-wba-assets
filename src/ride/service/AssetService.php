@@ -160,9 +160,11 @@ class AssetService {
      * Gets the URL for an asset
      * @param string|\ride\application\orm\asset\entry\AssetEntry $asset
      * @param string $style Name of the style to apply
+     * @param boolean $forceImage Set to true to get the thumbnail URL of non
+     * image assets
      * @return string|null
      */
-    public function getAssetUrl($asset, $style = null) {
+    public function getAssetUrl($asset, $style = null, $forceImage = false) {
         if (!$asset instanceof AssetEntry) {
             $asset = $this->getAsset($asset);
             if (!$asset) {
@@ -170,7 +172,7 @@ class AssetService {
             }
         }
 
-        if ($asset->isUrl()) {
+        if (!$forceImage && $asset->isUrl()) {
             return $asset->getValue();
         } elseif (!$asset->isImage()) {
             return null;
