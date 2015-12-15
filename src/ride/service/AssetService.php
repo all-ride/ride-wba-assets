@@ -174,26 +174,23 @@ class AssetService {
 
         if (!$forceImage && $asset->isUrl()) {
             return $asset->getValue();
-        } elseif (!$asset->isImage()) {
+        }
+
+        $image = $asset->getImage();
+        if (!$image) {
             return null;
         }
 
         // check for overriden style image
         if ($style) {
-            $image = $asset->getStyleImage($style);
-            if ($image) {
+            $styleImage = $asset->getStyleImage($style);
+            if ($styleImage) {
                 // transform to the correct size
                 $transformations = $this->getImageStyle($style)->getSizeTransformationArray();
 
                 // get url for the provided image
-                return $this->imageUrlGenerator->generateUrl($image, $transformations);
+                return $this->imageUrlGenerator->generateUrl($styleImage, $transformations);
             }
-        }
-
-        // no style image set
-        $image = $asset->getImage();
-        if (!$image) {
-            return null;
         }
 
         $transformations = null;
