@@ -41,9 +41,23 @@ class GenericAssetParser implements AssetParser {
             }
             $result .= '>';
         } elseif ($asset->isAudio()) {
-            $result = '<audio src="' . $assetService->getAssetUrl($asset) . '" controls></audio>';
+            switch ($asset->getSource()) {
+                case 'soundcloud':
+                    $result = '<iframe frameborder="0" src="' . $assetService->getAssetUrl($asset) . '"></iframe>';
+                    break;
+                default:
+                    $result = '<audio src="' . $assetService->getAssetUrl($asset) . '" controls></audio>';
+            }
         } elseif ($asset->isVideo()) {
-            $result = '<video src="' . $assetService->getAssetUrl($asset) . '" controls></video>';
+            switch ($asset->getSource()) {
+                case 'youtube':
+                case 'vimeo':
+                    $result = '<div class="iframe iframe--16-9"><iframe frameborder="0" src="' . $asset->getEmbedUrl() . '"></iframe></div>';
+                    break;
+                default:
+                    $result = '<video src="' . $assetService->getAssetUrl($asset) . '" controls></video>';
+                    break;
+            }
         } else {
             $result = '<a href="' . $assetService->getAssetUrl($asset) . '">' . $asset->getName() . '</a>';
         }
