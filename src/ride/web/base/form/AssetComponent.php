@@ -64,6 +64,7 @@ class AssetComponent extends AbstractComponent {
 
         $data = array(
             'name' => $data->getName(),
+            'alt' => $data->getAlt(),
             'description' => $data->getDescription(),
             'copyright' => $data->getCopyright(),
             'resource' => $isUrl ? 'url' : 'file',
@@ -83,6 +84,7 @@ class AssetComponent extends AbstractComponent {
         $asset = $this->data;
 
         $asset->setName($data['name']);
+        $asset->setAlt($data['alt']);
         $asset->setDescription($data['description']);
         $asset->setCopyright($data['copyright']);
 
@@ -136,6 +138,12 @@ class AssetComponent extends AbstractComponent {
         ));
         $builder->addRow('name', 'string', array(
             'label' => $translator->translate('label.name'),
+            'filters' => array(
+                'trim' => array(),
+            )
+        ));
+        $builder->addRow('alt', 'string', array(
+            'label' => $translator->translate('label.alt'),
             'filters' => array(
                 'trim' => array(),
             )

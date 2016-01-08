@@ -7,6 +7,7 @@
     "button.image.transformations": "Manage the transformations",
     "button.order": "Order",
     "label.actions.order": "Order Actions",
+    "label.alt": "Alt",
     "label.assets": "Assets",
     "label.asset": "Asset",
     "label.confirm.asset.delete": "Are you sure you want to delete %name%?",
