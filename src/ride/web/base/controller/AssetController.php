@@ -589,8 +589,12 @@ class AssetController extends AbstractController {
             'embed' => true,
         ));
         foreach ($styles as $style) {
+            $imageStyleImage = $asset->getStyle($style->getSlug());
             $form->addRow('style-' . $style->getSlug(), 'image', array(
                 'path' => $assetComponent->getDirectory(),
+                'attributes' => array(
+                    'data-id' => ($imageStyleImage) ? $asset->getStyle($style->getSlug())->getId() : null,
+                ),
             ));
         }
         $form = $form->build();
