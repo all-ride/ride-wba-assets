@@ -572,7 +572,6 @@ class AssetController extends AbstractController {
             }
         }
 
-
         $data = array(
             'asset' => $asset,
         );
@@ -590,10 +589,11 @@ class AssetController extends AbstractController {
         ));
         foreach ($styles as $style) {
             $imageStyleImage = $asset->getStyle($style->getSlug());
+
             $form->addRow('style-' . $style->getSlug(), 'image', array(
                 'path' => $assetComponent->getDirectory(),
                 'attributes' => array(
-                    'data-id' => ($imageStyleImage) ? $asset->getStyle($style->getSlug())->getId() : null,
+                    'data-id' => $imageStyleImage ? $imageStyleImage->getId() : null,
                 ),
             ));
         }
