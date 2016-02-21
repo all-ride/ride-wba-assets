@@ -42,6 +42,12 @@ class AssetService {
     private $imageStyles;
 
     /**
+     * Flag to see if all image styles have been fetched
+     * @var boolean
+     */
+    private $hasAllImageStyles;
+
+    /**
      * Loaded asset parsers
      * @var array
      */
@@ -65,6 +71,7 @@ class AssetService {
         $this->imageStyleModel = $imageStyleModel;
         $this->imageUrlGenerator = $imageUrlGenerator;
         $this->imageStyles = array();
+        $this->hasAllImageStyles = false;
         $this->assetParsers = array();
         $this->defaultClass = null;
     }
@@ -125,6 +132,21 @@ class AssetService {
     }
 
     /**
+     * Gets all the available image styles
+     * @return array
+     * @see \ride\application\orm\asset\entry\ImageStyleEntry
+     */
+    public function getImageStyles() {
+        if (!$this->hasAllImageStyles) {
+            $this->imageStyles = $this->imageStyleModel->find(null, null, false, 0, 'slug');
+
+            $this->hasAllImageStyles = true;
+        }
+
+        return $this->imageStyles;
+    }
+
+    /**
      * Gets the image style with the provided name
      * @param string $style Name of the style
      * @return \ride\application\orm\asset\entry\ImageStyleEntry
@@ -134,7 +156,10 @@ class AssetService {
             return $this->imageStyles[$style];
         }
 
-        $this->imageStyles[$style] = $this->imageStyleModel->getBy(array('filter' => array('slug' => $style)));
+        if (!$this->hasAllImageStyles) {
+            $this->imageStyles[$style] = $this->imageStyleModel->getBy(array('filter' => array('slug' => $style)));
+        }
+
         if (!$this->imageStyles[$style]) {
             throw new Exception('Could not load style ' . $style . ': style does not exist');
         }
