@@ -25,7 +25,7 @@ class ImageStyleController extends ScaffoldController {
      */
     protected function getIndexActions($locale) {
         return array(
-            $this->getUrl('system.orm.scaffold.index', array('model' => 'ImageTransformation', 'locale' => $locale)) => $this->getTranslator()->translate('button.image.transformations'),
+            (string) $this->getUrl('system.orm.scaffold.index', array('model' => 'ImageTransformation', 'locale' => $locale)) => $this->getTranslator()->translate('button.image.transformations'),
         );
     }
 
