@@ -572,7 +572,6 @@ class AssetController extends AbstractController {
             }
         }
 
-
         $data = array(
             'asset' => $asset,
         );
