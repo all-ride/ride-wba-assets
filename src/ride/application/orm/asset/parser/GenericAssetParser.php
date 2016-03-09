@@ -39,6 +39,9 @@ class GenericAssetParser implements AssetParser {
             if ($this->imageClass) {
                 $result .= ' class="' . $this->imageClass . '"';
             }
+            if ($asset->getAlt()) {
+                $result .= ' alt="' . $asset->getAlt() . '"';
+            }
             $result .= '>';
         } elseif ($asset->isAudio()) {
             switch ($asset->getSource()) {
