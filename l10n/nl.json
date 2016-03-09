@@ -1,5 +1,5 @@
 {
-    "button.add.asset": "Asset toevoegen",
+    "button.add.asset": "Bestand toevoegen",
     "button.add.folder": "Map toevoegen",
     "button.add.image.style": "Stijl toevoegen",
     "button.add.image.transformation": "Transformatie toevoegen",
@@ -8,8 +8,8 @@
     "button.order": "Sorteren",
     "label.actions.order": "Sorteeracties",
     "label.alt": "Alt",
-    "label.assets": "Assets",
-    "label.asset": "Asset",
+    "label.assets": "Bestanden",
+    "label.asset": "Bestand",
     "label.confirm.asset.delete": "Ben je zeker dat je %name% wil verwijderen?",
     "label.copyright": "Copyright",
     "label.dates.all": "Alle datums",
@@ -37,7 +37,7 @@
     "label.type.image": "Afbeelding",
     "label.type.video": "Video",
     "label.types.all": "Alle types",
-    "title.assets": "Assets",
+    "title.assets": "Bestanden",
     "title.image.styles": "Afbeeldingsstijlen",
     "title.image.transformations": "Afbeeldingstransformaties"
 }
