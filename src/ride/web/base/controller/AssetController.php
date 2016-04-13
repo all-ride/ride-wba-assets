@@ -253,7 +253,7 @@ class AssetController extends AbstractController {
      * @param \ride\library\orm\OrmManager $orm Instance of the ORM
      * @param string $locale Code of the locale
      * @param string $folder Id or slug of the folder
-     * @return null
+     * @return boolean
      */
     protected function processBulkAction(OrmManager $orm, $locale, $folder = null, array $data) {
         $assetModel = $orm->getAssetModel();
@@ -262,6 +262,14 @@ class AssetController extends AbstractController {
         $folder = $folderModel->getFolder($folder, $locale, true);
         if (!$folder) {
             $this->response->setNotFound();
+
+            return false;
+        }
+
+        if ($data['action'] == 'move') {
+            $url = $this->getUrl('assets.move', array('locale' => $locale), array('folders' => $data['folders'], 'assets' => $data['assets'], 'referer' => $this->request->getUrl()));
+
+            $this->response->setRedirect($url);
 
             return false;
         }
@@ -322,6 +330,100 @@ class AssetController extends AbstractController {
         $assetModel->orderFolder($folder, $data['order']);
 
         return true;
+    }
+
+    /**
+     * Action to move assets and folders
+     * @param \ride\library\i18n\I18n $i18n Instance of I18n
+     * @param \ride\librayr\orm\OrmManager $orm Instance of the ORM
+     * @param string $locale Code of the locale
+     * @return null
+     */
+    public function moveAction(I18n $i18n, OrmManager $orm, $locale) {
+        $assetModel = $orm->getAssetModel();
+        $folderModel = $orm->getAssetFolderModel();
+
+        $folders = $this->request->getQueryParameter('folders', array());
+        foreach ($folders as $index => $folder) {
+            $folders[$index] = $folderModel->getById($folder, $locale, true);
+            if (!$folders[$index]) {
+                $this->addError('error.data.found', array('data' => 'AssetFolder #' . $folder));
+
+                unset($folders[$index]);
+            }
+        }
+
+        $assets = $this->request->getQueryParameter('assets', array());
+        foreach ($assets as $index => $asset) {
+            $assets[$index] = $assetModel->getById($asset, $locale, true);
+            if (!$assets[$index]) {
+                $this->addError('error.data.found', array('data' => 'Asset #' . $asset));
+
+                unset($assets[$index]);
+            }
+        }
+
+        $referer = $this->request->getQueryParameter('referer');
+
+        // create the form
+        $translator = $this->getTranslator();
+
+        $form = $this->createFormBuilder();
+        $form->addRow('destination', 'option', array(
+            'label' => $translator->translate('label.destination'),
+            'description' => $translator->translate('label.destination.assets.description'),
+            'options' => array('0' => '---') + $folderModel->getOptionList($locale, true),
+            'widget' => 'select',
+        ));
+        $form = $form->build();
+
+        // process the form
+        if ($form->isSubmitted()) {
+            try {
+                $form->validate();
+
+                $data = $form->getData();
+
+                if ($data['destination']) {
+                    $destination = $folderModel->getById($data['destination'], $locale, true);
+                } else {
+                    $destination = null;
+                }
+
+                if ($folders) {
+                    $folderModel->move($folders, $destination);
+                }
+                if ($assets) {
+                    $assetModel->move($assets, $destination);
+                }
+
+                if (!$referer) {
+                    $referer = $this->getUrl('assets.folder.overview', array(
+                        'locale' => $locale,
+                        'folder' => $destination->getId(),
+                    ));
+                }
+
+                $this->response->setRedirect($referer);
+
+                return;
+            } catch (ValidationException $exception) {
+                $this->setValidationException($exception, $form);
+            }
+        }
+
+        $embed = $this->request->getQueryParameter('embed', false);
+
+        // set the view
+        $this->setTemplateView('assets/move', array(
+            'form' => $form->getView(),
+            'folders' => $folders,
+            'assets' => $assets,
+            'embed' => $embed,
+            'referer' => $referer,
+            'locales' => $i18n->getLocaleCodeList(),
+            'locale' => $locale,
+        ));
     }
 
     /**
