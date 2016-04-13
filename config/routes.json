@@ -19,6 +19,12 @@
             "id": "assets.overview.locale"
         },
         {
+            "path": "/admin/assets/%locale%/move",
+            "controller": "ride\\web\\base\\controller\\AssetController",
+            "action": "moveAction",
+            "id": "assets.move"
+        },
+        {
             "path": "/admin/assets/%locale%/folders/%folder%",
             "controller": "ride\\web\\base\\controller\\AssetController",
             "action": "indexAction",
