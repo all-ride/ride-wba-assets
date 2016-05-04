@@ -689,16 +689,20 @@ class AssetController extends AbstractController {
             'component' => $assetComponent,
             'embed' => true,
         ));
-        foreach ($styles as $style) {
-            $imageStyleImage = $asset->getStyle($style->getSlug());
 
-            $form->addRow('style-' . $style->getSlug(), 'image', array(
-                'path' => $assetComponent->getDirectory(),
-                'attributes' => array(
-                    'data-id' => $imageStyleImage ? $imageStyleImage->getId() : null,
-                ),
-            ));
+        if ($asset->getId()) {
+            foreach ($styles as $style) {
+                $imageStyleImage = $asset->getStyle($style->getSlug());
+
+                $form->addRow('style-' . $style->getSlug(), 'image', array(
+                    'path' => $assetComponent->getDirectory(),
+                    'attributes' => array(
+                        'data-id' => $imageStyleImage ? $imageStyleImage->getId() : null,
+                    ),
+                ));
+            }
         }
+
         $form = $form->build();
 
         // process form
