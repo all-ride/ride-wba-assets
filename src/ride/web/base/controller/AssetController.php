@@ -698,7 +698,13 @@ class AssetController extends AbstractController {
         ));
 
         if ($asset->getId()) {
-            foreach ($styles as $style) {
+            foreach ($styles as $styleId => $style) {
+                if (!$style->isExposed()) {
+                    unset($styles[$styleId]);
+
+                    continue;
+                }
+
                 $imageStyleImage = $asset->getStyle($style->getSlug());
 
                 $form->addRow('style-' . $style->getSlug(), 'image', array(

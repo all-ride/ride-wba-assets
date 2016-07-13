@@ -17,6 +17,8 @@
     "label.description": "Beschrijving",
     "label.destination.assets.description": "Selecteer de bestemming voor de volgende mappen en bestanden.",
     "label.dimension": "Dimensie",
+    "label.expose": "Tonen",
+    "label.expose.image.style.description": "Toon deze stijl in \"Bestanden\".",
     "label.folder.info": "%folders% submappen, %items% items",
     "label.folder": "Map",
     "label.file": "Bestand",
