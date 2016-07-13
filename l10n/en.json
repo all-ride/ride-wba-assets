@@ -17,6 +17,8 @@
     "label.description": "Description",
     "label.destination.assets.description": "Select the destination for the following folders and assets.",
     "label.dimension": "Dimensions",
+    "label.expose": "Expose",
+    "label.expose.image.style.description": "Expose this image style to the asset backend",
     "label.folder.info": "%folders% subfolders, %items% items",
     "label.folder": "Folder",
     "label.file": "File",

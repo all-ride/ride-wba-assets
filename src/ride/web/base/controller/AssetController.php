@@ -601,7 +601,14 @@ class AssetController extends AbstractController {
         if (is_numeric($asset)) {
             $asset = $assetModel->getById($asset);
         } else {
-            $asset = $assetModel->getBy(array('filter' => array('slug' => $asset)));
+            $locales = $orm->getLocales();
+
+            foreach ($locales as $locale) {
+                $asset = $assetModel->getBy(array('filter' => array('slug' => $asset)), $locale);
+                if ($asset) {
+                    break;
+                }
+            }
         }
 
         if (!$asset) {
@@ -691,7 +698,13 @@ class AssetController extends AbstractController {
         ));
 
         if ($asset->getId()) {
-            foreach ($styles as $style) {
+            foreach ($styles as $styleId => $style) {
+                if (!$style->isExposed()) {
+                    unset($styles[$styleId]);
+
+                    continue;
+                }
+
                 $imageStyleImage = $asset->getStyle($style->getSlug());
 
                 $form->addRow('style-' . $style->getSlug(), 'image', array(
