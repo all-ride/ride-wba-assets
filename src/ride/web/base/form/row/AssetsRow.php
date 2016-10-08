@@ -6,6 +6,7 @@ use ride\library\form\row\AbstractRow;
 use ride\library\form\row\HtmlRow;
 use ride\library\form\widget\GenericWidget;
 use ride\library\orm\OrmManager;
+use ride\library\validation\exception\ValidationException;
 use ride\library\validation\factory\ValidationFactory;
 
 use ride\web\base\form\widget\AssetsWidget;
@@ -90,6 +91,31 @@ class AssetsRow extends AbstractRow implements HtmlRow {
      */
     public function setData($data) {
         $this->data = $data;
+    }
+
+    /**
+     * Applies the validation rules
+     * @param \ride\library\validation\exception\ValidationException $validationException
+     * @return null
+     */
+    public function applyValidation(ValidationException $validationException) {
+        foreach ($this->filters as $filter) {
+            $this->data = $filter->filter($this->data);
+        }
+
+        if (isset($this->widget)) {
+            $this->widget->setValue($this->data);
+
+            $name = $this->widget->getName();
+        } else {
+            $name = $this->name;
+        }
+
+        foreach ($this->validators as $validator) {
+            if (!$validator->isValid($this->data)) {
+                $validationException->addErrors($name, $validator->getErrors());
+            }
+        }
     }
 
     /**
