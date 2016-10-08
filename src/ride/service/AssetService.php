@@ -206,21 +206,26 @@ class AssetService {
             return null;
         }
 
-        // check for overriden style image
-        if ($style) {
-            $styleImage = $asset->getStyleImage($style);
-            if ($styleImage) {
-                // transform to the correct size
-                $transformations = $this->getImageStyle($style)->getSizeTransformationArray();
+        // // check for overriden style image
+        // if ($style) {
+            // $styleImage = $asset->getStyleImage($style);
+            // if ($styleImage) {
+                // // transform to the correct size
+                // $transformations = $this->getImageStyle($style)->getTransformationArray();
 
-                // get url for the provided image
-                return $this->imageUrlGenerator->generateUrl($styleImage, $transformations);
-            }
-        }
+                // // get url for the provided image
+                // return $this->imageUrlGenerator->generateUrl($styleImage, $transformations);
+            // }
+        // }
 
         $transformations = null;
         if ($style) {
             $transformations = $this->getImageStyle($style)->getTransformationArray();
+
+            $styleImage = $asset->getStyleImage($style);
+            if ($styleImage) {
+                $image = $styleImage;
+            }
         }
 
         // get url for the provided image
@@ -238,7 +243,7 @@ class AssetService {
         if (!$asset instanceof AssetEntry) {
             $asset = $this->getAsset($asset);
             if (!$asset) {
-                return null;
+                throw new Exception('Could not get asset HTML: No asset found with id ' . $asset);
             }
         }
 
