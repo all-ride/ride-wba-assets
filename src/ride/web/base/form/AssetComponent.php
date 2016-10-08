@@ -67,7 +67,7 @@ class AssetComponent extends AbstractComponent {
             'alt' => $data->getAlt(),
             'description' => $data->getDescription(),
             'copyright' => $data->getCopyright(),
-            'resource' => $isUrl ? 'url' : 'file',
+            'resource' => $isUrl || !$value ? 'url' : 'file',
             'file' => !$isUrl ? $value : '',
             'url' => $isUrl ? $value : '',
         );
@@ -118,10 +118,16 @@ class AssetComponent extends AbstractComponent {
                 'data-toggle-dependant' => 'option-resource',
             ),
             'options' => array(
-                'file' => $translator->translate('label.file'),
                 'url' => $translator->translate('label.url'),
+                'file' => $translator->translate('label.file'),
             ),
-            'default' => 'file',
+            'default' => 'url',
+        ));
+        $builder->addRow('url', 'website', array(
+            'label' => $translator->translate('label.url'),
+            'attributes' => array(
+                'class' => 'option-resource option-resource-url',
+            ),
         ));
         $builder->addRow('file', 'file', array(
             'label' => $translator->translate('label.file'),
@@ -129,12 +135,6 @@ class AssetComponent extends AbstractComponent {
                 'class' => 'option-resource option-resource-file',
             ),
             'path' => $this->directory,
-        ));
-        $builder->addRow('url', 'website', array(
-            'label' => $translator->translate('label.url'),
-            'attributes' => array(
-                'class' => 'option-resource option-resource-url',
-            ),
         ));
         $builder->addRow('name', 'string', array(
             'label' => $translator->translate('label.name'),

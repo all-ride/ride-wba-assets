@@ -13,11 +13,43 @@ use ride\service\AssetService;
 
 use ride\web\base\controller\AbstractController;
 use ride\web\base\form\AssetComponent;
+use ride\web\base\view\BaseTemplateView;
 
 /**
  * Controller to manage the assets
  */
 class AssetController extends AbstractController {
+
+    /**
+     * Flag to see if embed modus is enabled
+     * @var boolean
+     */
+    private $embed;
+
+    /**
+     * Hook before every action
+     * @return boolean Flag to see if the action should be invoked
+     */
+    public function preAction() {
+        $this->embed = (boolean) $this->request->getQueryParameter('embed', false);
+
+        return true;
+    }
+
+    /**
+     * Hook after every action
+     * @return null
+     */
+    public function postAction() {
+        $view = $this->response->getView();
+        if (!$view instanceof BaseTemplateView) {
+            return;
+        }
+
+        if ($this->embed) {
+            $view->removeTaskbar();
+        }
+    }
 
     /**
      * Action to show an overview of a folder
@@ -52,7 +84,6 @@ class AssetController extends AbstractController {
         $assetModel = $orm->getAssetModel();
 
         // process arguments
-        $embed = $this->request->getQueryParameter('embed', false);
         $selected = $this->request->getQueryParameter('selected');
 
         $views = array('grid', 'list');
@@ -118,7 +149,10 @@ class AssetController extends AbstractController {
         $form->addRow('folders', 'hidden', array(
             'multiple' => true,
         ));
+        /* @deprecated, breaks submit function in js */
         $form->addRow('submit', 'hidden', array());
+        /* alternative */
+        $form->addRow('_submit', 'hidden', array());
         $form = $form->build();
 
         // handle form
@@ -126,6 +160,11 @@ class AssetController extends AbstractController {
             $url = $this->request->getUrl();
 
             $data = $form->getData();
+
+            if (!$data['submit'] && $data['_submit']) {
+                $data['submit'] = $data['_submit'];
+            }
+
             switch ($data['submit']) {
                 case 'limit':
                     $limit = $data['limit'];
@@ -139,7 +178,7 @@ class AssetController extends AbstractController {
                         $url = $this->getUrl('assets.overview.locale', array('locale' => $locale));
                     }
 
-                    $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']) . '&embed=' . ($embed ? 1 : 0) . '&limit=' . $limit . '&page=1';
+                    $url .= '?view=' . $view . '&type=' . urlencode($data['type']) . '&date=' . urlencode($data['date']) . '&embed=' . ($this->embed ? 1 : 0) . '&limit=' . $limit . '&page=1';
                     if ($selected) {
                         $url .= '&selected=' . $selected;
                     }
@@ -203,7 +242,7 @@ class AssetController extends AbstractController {
             $assets = array();
         }
 
-        $urlSuffix = '?view=' . $view . '&type=' . $filter['type'] . '&date=' . $filter['date'] . '&embed=' . ($embed ? 1 : 0) . '&limit=' . $limit . '&page=%page%';
+        $urlSuffix = '?view=' . $view . '&type=' . $filter['type'] . '&date=' . $filter['date'] . '&embed=' . ($this->embed ? 1 : 0) . '&limit=' . $limit . '&page=%page%';
         if ($filter['query']) {
             $urlSuffix .= '&query=' . urlencode($filter['query']);
         }
@@ -223,7 +262,7 @@ class AssetController extends AbstractController {
         $urlSuffix = str_replace('%page%', $page, $urlSuffix);
 
         // assign everything to view
-        $view = $this->setTemplateView('assets/overview', array(
+        $this->setTemplateView('assets/overview', array(
             'form' => $form->getView(),
             'folder' => $folder,
             'folders' => $folders,
@@ -239,7 +278,7 @@ class AssetController extends AbstractController {
             'view' => $view,
             'filter' => $filter,
             'isFiltered' => $isFiltered,
-            'embed' => $embed,
+            'embed' => $this->embed,
             'selected' => $selected,
             'urlSuffix' => $urlSuffix,
             'locales' => $i18n->getLocaleCodeList(),
@@ -397,6 +436,8 @@ class AssetController extends AbstractController {
                     $assetModel->move($assets, $destination);
                 }
 
+                $this->addSuccess('success.assets.moved');
+
                 if (!$referer) {
                     $referer = $this->getUrl('assets.folder.overview', array(
                         'locale' => $locale,
@@ -412,14 +453,12 @@ class AssetController extends AbstractController {
             }
         }
 
-        $embed = $this->request->getQueryParameter('embed', false);
-
         // set the view
         $this->setTemplateView('assets/move', array(
             'form' => $form->getView(),
             'folders' => $folders,
             'assets' => $assets,
-            'embed' => $embed,
+            'embed' => $this->embed,
             'referer' => $referer,
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
@@ -465,6 +504,9 @@ class AssetController extends AbstractController {
         $form = $this->createFormBuilder($folder);
         $form->addRow('name', 'string', array(
             'label' => $translator->translate('label.name'),
+            'validators' => array(
+                'required' => array(),
+            ),
         ));
         $form->addRow('description', 'wysiwyg', array(
             'label' => $translator->translate('label.description'),
@@ -481,6 +523,8 @@ class AssetController extends AbstractController {
 
                 $folderModel->save($folder);
 
+                $this->addSuccess('success.data.saved', array('data' => $folder->getName()));
+
                 $this->response->setRedirect($referer);
 
                 return;
@@ -489,13 +533,12 @@ class AssetController extends AbstractController {
             }
         }
 
-        $embed = $this->request->getQueryParameter('embed', false);
-
         // set the view
         $this->setTemplateView('assets/folder', array(
             'form' => $form->getView(),
             'folder' => $folder,
-            'embed' => $embed,
+            'breadcrumbs' => $folderModel->getBreadcrumbs($folder),
+            'embed' => $this->embed,
             'referer' => $referer,
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
@@ -561,11 +604,9 @@ class AssetController extends AbstractController {
             return;
         }
 
-        $embed = $this->request->getQueryParameter('embed', false);
-
         $this->setTemplateView('assets/delete', array(
             'name' => $folder->getName(),
-            'embed' => $embed,
+            'embed' => $this->embed,
             'referer' => $referer,
         ));
     }
@@ -671,7 +712,7 @@ class AssetController extends AbstractController {
 
         $media = null;
         $referer = $this->getAssetReferer($asset, $locale);
-        $embed = $this->request->getQueryParameter('embed', false);
+        $view = $this->request->getQueryParameter('view', 'grid');
 
         if ($asset->isUrl()) {
             try {
@@ -756,12 +797,15 @@ class AssetController extends AbstractController {
                     // ajax request
                     $this->setTemplateView('assets/detail', array(
                         'item' => $asset,
-                        'embed' => $embed,
+                        'embed' => $this->embed,
                         'referer' => $referer,
                         'locale' => $locale,
+                        'view' => $view,
                     ));
                 } else {
                     // regular client
+                    $this->addSuccess('success.data.saved', array('data' => $asset->getName()));
+
                     $this->response->setRedirect($referer);
                 }
 
@@ -776,8 +820,9 @@ class AssetController extends AbstractController {
             'folder' => $folder,
             'styles' => $styles,
             'asset' => $asset,
-            'embed' => $embed,
+            'embed' => $this->embed,
             'referer' => $referer,
+            'breadcrumbs' => $folder ? $folderModel->getBreadcrumbs($folder) : array(),
             'media' => $media,
             'dimension' => $assetModel->getDimension($asset),
             'locales' => $i18n->getLocaleCodeList(),
@@ -852,11 +897,9 @@ class AssetController extends AbstractController {
             return;
         }
 
-        $embed = $this->request->getQueryParameter('embed', false);
-
         $this->setTemplateView('assets/delete', array(
             'name' => $asset->getName(),
-            'embed' => $embed,
+            'embed' => $this->embed,
             'referer' => $referer,
         ));
     }
