@@ -1,4 +1,4 @@
-# Ride: Web ORM
+# Ride: Web ORM Assets
 
 This module adds the backend for assets to the Ride web application.
 
