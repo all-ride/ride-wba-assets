@@ -633,6 +633,8 @@ class AssetController extends AbstractController {
     /**
      * Action to get the original value of an asset
      * @param \ride\library\orm\OrmManager $orm
+     * @param FileBrowser $fileBrowser
+     * @param AssetService $assetService
      * @param string $asset
      * @return null
      */
@@ -640,37 +642,38 @@ class AssetController extends AbstractController {
         $assetModel = $orm->getAssetModel();
 
         if (is_numeric($asset)) {
-            $asset = $assetModel->getById($asset);
+            $assetEntry = $assetModel->getById($asset);
         } else {
             $locales = $orm->getLocales();
 
             foreach ($locales as $locale) {
-                $asset = $assetModel->getBy(array('filter' => array('slug' => $asset)), $locale);
-                if ($asset) {
+                $assetEntry = $assetModel->getBy(['filter' => ['slug' => $asset]], $locale);
+
+                if (!empty($assetEntry)) {
                     break;
                 }
             }
         }
 
-        if (!$asset) {
+        if (empty($assetEntry)) {
             $this->response->setNotFound();
 
             return;
         }
 
-        $url = $assetService->getAssetUrl($asset, $this->request->getQueryParameter('style'));
+        $url = $assetService->getAssetUrl($assetEntry, $this->request->getQueryParameter('style'));
         if ($url) {
             $this->response->setRedirect($url);
 
             return;
         }
 
-        $file = $fileBrowser->getFile($asset->getValue());
+        $file = $fileBrowser->getFile($assetEntry->getValue());
         if (!$file) {
             $this->response->setNotFound();
 
             return;
-         }
+        }
 
         $this->setFileView($file);
     }
