@@ -135,6 +135,7 @@ class AssetComponent extends AbstractComponent {
                 'class' => 'option-resource option-resource-file',
             ),
             'path' => $this->directory,
+            'allow_delete' => false,
         ));
         $builder->addRow('name', 'string', array(
             'label' => $translator->translate('label.name'),
