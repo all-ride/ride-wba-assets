@@ -47,6 +47,7 @@
     "label.type.unknown": "Unknown",
     "label.types.all": "All types",
     "label.url": "Url",
+    "permission.assets.chroot": "Limit a user to his own assets",
     "success.assets.moved": "The selected assets have been moved",
     "title.assets": "Assets",
     "title.image.styles": "Image Styles",
