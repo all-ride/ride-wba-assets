@@ -796,7 +796,7 @@ class AssetController extends AbstractController {
             'asset' => $asset,
         );
 
-        $styles = $styleModel->find();
+        $styles = $styleModel->find(null, null, true);
         foreach ($styles as $style) {
             $data['style-' . $style->getSlug()] = $asset->getStyleImage($style->getSlug());
         }
