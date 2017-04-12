@@ -47,6 +47,7 @@
     "label.type.video": "Video",
     "label.types.all": "Alle types",
     "label.url": "URL",
+    "permission.assets.chroot": "Limiteer een gebruiker in zijn eigen bestanden",
     "success.assets.moved": "De geselecteerde bestanden werden verplaatst",
     "title.assets": "Bestanden",
     "title.image.styles": "Afbeeldingsstijlen",

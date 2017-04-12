@@ -1,6 +1,10 @@
 # Changelog
 
-## [1.1.0]
+## [1.1.1] - 2017-04-12
+### Added
+- translation for the chroot permission
+
+## [1.1.0] - 2017-04-12
 ### Added
 - implemented user chrooting
 
