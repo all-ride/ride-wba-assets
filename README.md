@@ -2,6 +2,13 @@
 
 This module adds the backend for assets to the Ride web application.
 
+## User Chrooting
+
+You can chroot users in their own folder by granting the `assets.chroot` permission to a user.
+
+This will create a  `Users` folder in the root directory which is the parent for all chrooted folders.
+A user's folder has the username as name.
+
 ## Related Modules 
 
 - [ride/app](https://github.com/all-ride/ride-app)
