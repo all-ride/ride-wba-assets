@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.0]
+### Added
+- implemented user chrooting
+
 ## [1.0.4] - 2017-01-24
 ### Removed
 - delete file link in form field, only update allowed

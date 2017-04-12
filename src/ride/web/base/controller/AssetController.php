@@ -2,6 +2,9 @@
 
 namespace ride\web\base\controller;
 
+use ride\application\orm\asset\entry\AssetFolderEntry;
+use ride\application\orm\asset\model\AssetFolderModel;
+
 use ride\library\html\Pagination;
 use ride\library\i18n\I18n;
 use ride\library\media\exception\UnsupportedMediaException;
@@ -21,10 +24,28 @@ use ride\web\base\view\BaseTemplateView;
 class AssetController extends AbstractController {
 
     /**
+     * Permission to limit a user to his own folder
+     * @var string
+     */
+    const PERMISSION_CHROOT = 'assets.chroot';
+
+    /**
+     * Name of the users folder, parent for chrooted folders
+     * @var string
+     */
+    const FOLDER_USERS = 'Users';
+
+    /**
      * Flag to see if embed modus is enabled
      * @var boolean
      */
     private $embed;
+
+    /**
+     * Chrooted folder for users with limited access
+     * @var \ride\application\orm\asset\entry\AssetFolderEntry
+     */
+    private $chroot;
 
     /**
      * Hook before every action
@@ -82,6 +103,18 @@ class AssetController extends AbstractController {
 
         $folderModel = $orm->getAssetFolderModel();
         $assetModel = $orm->getAssetModel();
+
+        // fetch folder
+        $folder = $folderModel->getFolder($folder, $locale, true);
+        if ($folder) {
+            $folder = $this->applyChroot($folderModel, $folder, $locale);
+        }
+
+        if (!$folder) {
+            $this->response->setNotFound();
+
+            return;
+        }
 
         // process arguments
         $selected = $this->request->getQueryParameter('selected');
@@ -169,10 +202,10 @@ class AssetController extends AbstractController {
                 case 'limit':
                     $limit = $data['limit'];
                 case 'filter':
-                    if ($folder) {
+                    if ($folder->getId()) {
                         $url = $this->getUrl('assets.folder.overview', array(
                             'locale' => $locale,
-                            'folder' => $folder,
+                            'folder' => $folder->getId(),
                         ));
                     } else {
                         $url = $this->getUrl('assets.overview.locale', array('locale' => $locale));
@@ -202,14 +235,6 @@ class AssetController extends AbstractController {
             }
 
             $this->response->setRedirect($url);
-
-            return;
-        }
-
-        // fetch folder
-        $folder = $folderModel->getFolder($folder, $locale, true);
-        if (!$folder) {
-            $this->response->setNotFound();
 
             return;
         }
@@ -274,7 +299,7 @@ class AssetController extends AbstractController {
             'pagination' => $pagination,
             'page' => $page,
             'pages' => $pages,
-            'breadcrumbs' => $folderModel->getBreadcrumbs($folder),
+            'breadcrumbs' => $folderModel->getBreadcrumbs($folder, $this->resolveChroot($folderModel, $locale)),
             'view' => $view,
             'filter' => $filter,
             'isFiltered' => $isFiltered,
@@ -291,20 +316,10 @@ class AssetController extends AbstractController {
      * Action to process bulk actions on the items of a folder
      * @param \ride\library\orm\OrmManager $orm Instance of the ORM
      * @param string $locale Code of the locale
-     * @param string $folder Id or slug of the folder
+     * @param \ride\application\orm\asset\entry\AssetFolderEntry $folder
      * @return boolean
      */
-    protected function processBulkAction(OrmManager $orm, $locale, $folder = null, array $data) {
-        $assetModel = $orm->getAssetModel();
-        $folderModel = $orm->getAssetFolderModel();
-
-        $folder = $folderModel->getFolder($folder, $locale, true);
-        if (!$folder) {
-            $this->response->setNotFound();
-
-            return false;
-        }
-
+    protected function processBulkAction(OrmManager $orm, $locale, AssetFolderEntry $folder, array $data) {
         if ($data['action'] == 'move') {
             $url = $this->getUrl('assets.move', array('locale' => $locale), array('folders' => $data['folders'], 'assets' => $data['assets'], 'referer' => $this->request->getUrl()));
 
@@ -312,6 +327,9 @@ class AssetController extends AbstractController {
 
             return false;
         }
+
+        $assetModel = $orm->getAssetModel();
+        $folderModel = $orm->getAssetFolderModel();
 
         if ($data['action'] == 'delete') {
             $children = $data['folders'];
@@ -350,22 +368,14 @@ class AssetController extends AbstractController {
      * Sorts the items of a folder
      * @param \ride\library\orm\OrmManager $orm Instance of the ORM
      * @param string $locale Code of the locale
-     * @param string $folder Id or slug of the folder
+     * @param \ride\application\orm\asset\entry\AssetFolderEntry $folder
      * @return null
      */
-    protected function processSort(OrmManager $orm, $locale, $folder = null, array $data) {
+    protected function processSort(OrmManager $orm, $locale, AssetFolderEntry $folder, array $data) {
         $folderModel = $orm->getAssetFolderModel();
-
-        $folder = $folderModel->getFolder($folder, $locale);
-        if (!$folder) {
-            $this->response->setNotFound();
-
-            return false;
-        }
+        $folderModel->orderFolder($folder, $data['order']);
 
         $assetModel = $orm->getAssetModel();
-
-        $folderModel->orderFolder($folder, $data['order']);
         $assetModel->orderFolder($folder, $data['order']);
 
         return true;
@@ -382,9 +392,16 @@ class AssetController extends AbstractController {
         $assetModel = $orm->getAssetModel();
         $folderModel = $orm->getAssetFolderModel();
 
+        // resolve all folders to move
         $folders = $this->request->getQueryParameter('folders', array());
         foreach ($folders as $index => $folder) {
+            if ($folder == 0) {
+                unset($folders[$index]);
+            }
+
             $folders[$index] = $folderModel->getById($folder, $locale, true);
+            $folders[$index] = $this->applyChroot($folderModel, $folders[$index], $locale);
+
             if (!$folders[$index]) {
                 $this->addError('error.data.found', array('data' => 'AssetFolder #' . $folder));
 
@@ -392,9 +409,21 @@ class AssetController extends AbstractController {
             }
         }
 
+        // resolve all assets to move
         $assets = $this->request->getQueryParameter('assets', array());
         foreach ($assets as $index => $asset) {
             $assets[$index] = $assetModel->getById($asset, $locale, true);
+            if ($assets[$index]) {
+                $assetFolder = $assets[$index]->getFolder();
+                if (!$assetFolder) {
+                    $assetFolder = $folderModel->getFolder(null, $locale);
+                }
+
+                if (!$this->applyChroot($folderModel, $assetFolder, $locale) || ($this->chroot->getId() !== 0 && $assetFolder->getId() == 0)) {
+                    $assets[$index] = null;
+                }
+            }
+
             if (!$assets[$index]) {
                 $this->addError('error.data.found', array('data' => 'Asset #' . $asset));
 
@@ -402,16 +431,31 @@ class AssetController extends AbstractController {
             }
         }
 
+        // where to go from here?
         $referer = $this->request->getQueryParameter('referer');
+        if (!$referer) {
+            $referer = $this->getUrl('assets.folder.overview', array(
+                'locale' => $locale,
+                'folder' => $destination->getId(),
+            ));
+        }
+
+        if (!$folders && !$assets) {
+            // nothing to do here
+            $this->response->setRedirect($referer);
+
+            return;
+        }
 
         // create the form
         $translator = $this->getTranslator();
+        $options = array('0' => '---') + $folderModel->getOptionList($locale, true, $this->chroot);
 
         $form = $this->createFormBuilder();
         $form->addRow('destination', 'option', array(
             'label' => $translator->translate('label.destination'),
             'description' => $translator->translate('label.destination.assets.description'),
-            'options' => array('0' => '---') + $folderModel->getOptionList($locale, true),
+            'options' => $options,
             'widget' => 'select',
         ));
         $form = $form->build();
@@ -425,8 +469,10 @@ class AssetController extends AbstractController {
 
                 if ($data['destination']) {
                     $destination = $folderModel->getById($data['destination'], $locale, true);
-                } else {
+                } elseif ($this->chroot->getId() == 0) {
                     $destination = null;
+                } else {
+                    $destination = $this->chroot;
                 }
 
                 if ($folders) {
@@ -437,13 +483,6 @@ class AssetController extends AbstractController {
                 }
 
                 $this->addSuccess('success.assets.moved');
-
-                if (!$referer) {
-                    $referer = $this->getUrl('assets.folder.overview', array(
-                        'locale' => $locale,
-                        'folder' => $destination->getId(),
-                    ));
-                }
 
                 $this->response->setRedirect($referer);
 
@@ -479,21 +518,40 @@ class AssetController extends AbstractController {
         // get the folder to add or edit
         if ($folder) {
             $folder = $folderModel->getFolder($folder, $locale, true);
+            if ($folder) {
+                $folder = $this->applyChroot($folderModel, $folder, $locale);
+            }
+
             if (!$folder) {
                 $this->response->setNotFound();
 
                 return;
             }
+
+            $breadcrumbsFolder = $folder;
         } else {
             $folder = $folderModel->createEntry();
 
             $parent = $this->request->getQueryParameter('folder');
             if ($parent) {
-                $parent = $folderModel->getById($parent);
+                $parent = $folderModel->getFolder($parent);
                 if ($parent) {
-                    $folder->setParent($parent->getPath());
+                    $parent = $this->applyChroot($folderModel, $parent, $locale);
                 }
+
+                if (!$parent) {
+                    $this->response->setNotFound();
+
+                    return;
+                }
+            } else {
+                $parent = $folderModel->getFolder(null, $locale);
+                $parent = $this->applyChroot($folderModel, $breadcrumbsFolder, $locale);
             }
+
+            $folder->setParent($parent->getPath());
+
+            $breadcrumbsFolder = $parent;
         }
 
         $referer = $this->getFolderReferer($folder, $locale);
@@ -537,7 +595,7 @@ class AssetController extends AbstractController {
         $this->setTemplateView('assets/folder', array(
             'form' => $form->getView(),
             'folder' => $folder,
-            'breadcrumbs' => $folderModel->getBreadcrumbs($folder),
+            'breadcrumbs' => $folderModel->getBreadcrumbs($breadcrumbsFolder, $this->chroot),
             'embed' => $this->embed,
             'referer' => $referer,
             'locales' => $i18n->getLocaleCodeList(),
@@ -558,6 +616,10 @@ class AssetController extends AbstractController {
 
         if ($folder) {
             $folder = $folderModel->getFolder($folder, $locale);
+            if ($folder) {
+                $folder = $this->applyChroot($folderModel, $folder, $locale);
+            }
+
             if (!$folder) {
                 $this->response->setNotFound();
 
@@ -586,6 +648,10 @@ class AssetController extends AbstractController {
         $folderModel = $orm->getAssetFolderModel();
 
         $folder = $folderModel->getFolder($folder);
+        if ($folder) {
+            $folder = $this->applyChroot($folderModel, $folder, $locale);
+        }
+
         if (!$folder) {
             $this->response->setNotFound();
 
@@ -609,25 +675,6 @@ class AssetController extends AbstractController {
             'embed' => $this->embed,
             'referer' => $referer,
         ));
-    }
-
-    /**
-     * Gets the referer of a folder
-     * @param AssetFolderEntry $folder
-     * @return string
-     */
-    protected function getFolderReferer($folder, $locale) {
-        $referer = $this->request->getQueryParameter('referer');
-        if ($referer) {
-            return $referer;
-        }
-
-        $parentFolderId = $folder->getParentFolderId();
-        if (!$parentFolderId) {
-            $parentFolderId = 0;
-        }
-
-        return $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $parentFolderId));
     }
 
     /**
@@ -702,13 +749,33 @@ class AssetController extends AbstractController {
             }
 
             $folder = $asset->getFolder();
+            if (!$folder) {
+                $folder = $folderModel->getFolder(null, $locale);
+            }
+
+            // secure assets in chrooted folders
+            $chroot = $this->applyChroot($folderModel, $folder, $locale);
+            if (!$chroot || ($chroot->getId() !== 0 && $folder->getId() == 0)) {
+                $this->response->setNotFound();
+
+                return;
+            }
         } else {
             $asset = $assetModel->createEntry();
 
             $folder = $this->request->getQueryParameter('folder');
+            $folder = $folderModel->getFolder($folder, $locale);
             if ($folder) {
-                $folder = $folderModel->createProxy($folder, $locale);
+                $folder = $this->applyChroot($folderModel, $folder, $locale);
+            }
 
+            if (!$folder) {
+                $this->response->setNotFound();
+
+                return;
+            }
+
+            if ($folder->getId() != 0) {
                 $asset->setFolder($folder);
             }
         }
@@ -825,7 +892,7 @@ class AssetController extends AbstractController {
             'asset' => $asset,
             'embed' => $this->embed,
             'referer' => $referer,
-            'breadcrumbs' => $folder ? $folderModel->getBreadcrumbs($folder) : array(),
+            'breadcrumbs' => $folder ? $folderModel->getBreadcrumbs($folder, $this->chroot) : array(),
             'media' => $media,
             'dimension' => $assetModel->getDimension($asset),
             'locales' => $i18n->getLocaleCodeList(),
@@ -847,7 +914,6 @@ class AssetController extends AbstractController {
 
         // resolve folder
         if ($folder) {
-
             $folder = $folderModel->getFolder($folder, $locale);
             if (!$folder) {
                 $this->response->setNotFound();
@@ -856,6 +922,14 @@ class AssetController extends AbstractController {
             }
         } else {
             $folder = $folderModel->createEntry();
+        }
+
+        // secure assets in chrooted folders
+        $chrootFolder = $this->applyChroot($folderModel, $folder, $locale);
+        if (!$chrootFolder) {
+            $this->response->setNotFound();
+
+            return;
         }
 
         // gather assets to order
@@ -881,8 +955,25 @@ class AssetController extends AbstractController {
     public function assetDeleteAction(OrmManager $orm, $locale, $asset) {
         $assetModel = $orm->getAssetModel();
 
+        // lookup asset
         $asset = $assetModel->getById($asset, $locale);
         if (!$asset) {
+            $this->response->setNotFound();
+
+            return;
+        }
+
+        // lookup asset folder
+        $folderModel = $orm->getAssetFolderModel();
+
+        $folder = $asset->getFolder();
+        if ($folder === null) {
+            $folder = $folderModel->getFolder(0, $locale);
+        }
+
+        // secure assets in chrooted folders
+        $chrootFolder = $this->applyChroot($folderModel, $folder, $locale);
+        if (!$chrootFolder || $folder->getId() != $chrootFolder->getId()) {
             $this->response->setNotFound();
 
             return;
@@ -891,6 +982,7 @@ class AssetController extends AbstractController {
         $referer = $this->getAssetReferer($asset, $locale);
 
         if ($this->request->isPost()) {
+            // perform delete
             $assetModel->delete($asset);
 
             $this->addSuccess('success.data.deleted', array('data' => $asset->getName()));
@@ -900,6 +992,7 @@ class AssetController extends AbstractController {
             return;
         }
 
+        // show confirmation
         $this->setTemplateView('assets/delete', array(
             'name' => $asset->getName(),
             'embed' => $this->embed,
@@ -908,8 +1001,93 @@ class AssetController extends AbstractController {
     }
 
     /**
+     * Applies the user's chroot for the provided folder
+     * @param \ride\application\orm\asset\model\AssetFolderModel $model
+     * @param \ride\application\orm\asset\entry\AssetFolderEntry $folder
+     * @param string $locale
+     * @return \ride\application\orm\asset\entry\AssetFolderEntry|boolean The
+     * folder if allowed for the user, false if the user is outside his chroot
+     */
+    protected function applyChroot(AssetFolderModel $model, AssetFolderEntry $folder, $locale) {
+        $this->resolveChroot($model, $locale);
+
+        if ($folder->getId() == '0') {
+            // root folder should be chrooted folder
+            return $this->chroot;
+        } elseif ($this->chroot->getId() != 0 && $folder->getId() != $this->chroot->getId() && !$folder->hasParentFolder($this->chroot)) {
+            // not inside chrooted folder
+            return false;
+        }
+
+        // we're good
+        return $folder;
+    }
+
+    /**
+     * Resolves the chroot folder of the current user
+     * @param \ride\application\orm\asset\model\AssetFolderModel $model
+     * @param string $locale
+     * @return \ride\application\orm\asset\entry\AssetFolderEntry
+     */
+    private function resolveChroot(AssetFolderModel $model, $locale) {
+        if ($this->chroot) {
+            return $this->chroot;
+        }
+
+        $securityManager = $this->getSecurityManager();
+        $user = $securityManager->getUser();
+
+        if (!$user || $user->isSuperUser() || !$securityManager->isPermissionGranted(self::PERMISSION_CHROOT)) {
+            // no restriction, root folder
+            $this->chroot = $model->getFolder(null, $locale, true);
+        } else {
+            $this->chroot = $model->getFolder($user->getUserName(), $locale, true);
+            if (!$this->chroot) {
+                // fetch users folder
+                $usersModel = $model->getFolder(self::FOLDER_USERS, $locale, true);
+                if (!$usersFolder) {
+                    // create users folder
+                    $usersFolder = $model->createEntry();
+                    $usersFolder->setName(self::FOLDER_USERS);
+                    $usersFolder->setLocale($locale);
+
+                    $model->save($usersFolder);
+                }
+
+                // create user's folder
+                $this->chroot = $model->createEntry();
+                $this->chroot->setName($user->getUserName());
+                $this->chroot->setParent($usersFolder->getPath());
+
+                $model->save($this->chroot);
+            }
+        }
+
+        return $this->chroot;
+    }
+
+    /**
+     * Gets the referer of a folder
+     * @param \ride\application\orm\asset\entry\AssetFolderEntry $folder
+     * @return string
+     */
+    protected function getFolderReferer($folder, $locale) {
+        $referer = $this->request->getQueryParameter('referer');
+        if ($referer) {
+            return $referer;
+        }
+
+        $parentFolderId = $folder->getParentFolderId();
+        if (!$parentFolderId) {
+            $parentFolderId = 0;
+        }
+
+        return $this->getUrl('assets.folder.overview', array('locale' => $locale, 'folder' => $parentFolderId));
+    }
+
+    /**
      * Gets the referer of an asset
-     * @param AssetEntry $asset
+     * @param \ride\application\orm\asset\entry\AssetEntry $asset
      * @return string
      */
     protected function getAssetReferer($asset, $locale) {

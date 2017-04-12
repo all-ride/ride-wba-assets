@@ -7,6 +7,7 @@
     "button.image.transformations": "Beheer de transformaties",
     "button.move": "Verplaatsen",
     "button.order": "Sorteren",
+    "error.data.found": "%data% werd niet gevonden",
     "label.actions.order": "Sorteeracties",
     "label.alt": "Alt",
     "label.assets": "Bestanden",
