@@ -26,6 +26,7 @@
     "label.file": "Bestand",
     "label.image.transformation.crop": "Afknippen",
     "label.image.transformation.resize": "Verkleinen",
+    "label.name.display": "Weergavenaam",
     "label.order.asc": "Oplopend",
     "label.order.desc": "Aflopend",
     "label.order.newest": "Nieuwste eerst",

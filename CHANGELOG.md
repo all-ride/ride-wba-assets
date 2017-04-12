@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.0] - 2017-04-12
+### Added
+- implemented image style display name
+
 ## [1.1.1] - 2017-04-12
 ### Added
 - translation for the chroot permission

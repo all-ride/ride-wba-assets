@@ -26,6 +26,7 @@
     "label.file": "File",
     "label.image.transformation.crop": "Crop",
     "label.image.transformation.resize": "Resize",
+    "label.name.display": "Display name",
     "label.order.asc": "Ascending",
     "label.order.desc": "Descending",
     "label.order.newest": "Newest first",
