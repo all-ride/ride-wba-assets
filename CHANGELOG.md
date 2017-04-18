@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.1] - 2017-04-18
+### Updated
+- use scaffold form component for folders
+- fixed breadcrumb error when creating new folder without parent
+
 ## [1.2.0] - 2017-04-12
 ### Added
 - implemented image style display name
