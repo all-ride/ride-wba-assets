@@ -13,10 +13,13 @@ use ride\library\system\file\browser\FileBrowser;
 use ride\library\validation\exception\ValidationException;
 
 use ride\service\AssetService;
+use ride\service\OrmService;
 
 use ride\web\base\controller\AbstractController;
 use ride\web\base\form\AssetComponent;
 use ride\web\base\view\BaseTemplateView;
+use ride\web\orm\form\ScaffoldComponent;
+use ride\web\WebApplication;
 
 /**
  * Controller to manage the assets
@@ -512,8 +515,8 @@ class AssetController extends AbstractController {
      * @param string $folder Id of slug of the folder to edit
      * @return null
      */
-    public function folderFormAction(I18n $i18n, OrmManager $orm, $locale, $folder = null) {
-        $folderModel = $orm->getAssetFolderModel();
+    public function folderFormAction(WebApplication $web, I18n $i18n, OrmService $ormService, $locale, $folder = null) {
+        $folderModel = $ormService->getModel('AssetFolder');
 
         // get the folder to add or edit
         if ($folder) {
@@ -546,7 +549,7 @@ class AssetController extends AbstractController {
                 }
             } else {
                 $parent = $folderModel->getFolder(null, $locale);
-                $parent = $this->applyChroot($folderModel, $breadcrumbsFolder, $locale);
+                $parent = $this->applyChroot($folderModel, $parent, $locale);
             }
 
             $folder->setParent($parent->getPath());
@@ -558,16 +561,20 @@ class AssetController extends AbstractController {
 
         // create the form
         $translator = $this->getTranslator();
+        $data = array('folder' => $folder);
 
-        $form = $this->createFormBuilder($folder);
-        $form->addRow('name', 'string', array(
-            'label' => $translator->translate('label.name'),
-            'validators' => array(
-                'required' => array(),
-            ),
-        ));
-        $form->addRow('description', 'wysiwyg', array(
-            'label' => $translator->translate('label.description'),
+        $folderComponent = new ScaffoldComponent($web, $this->getSecurityManager(), $ormService, $folderModel);
+        $folderComponent->setLocale($locale);
+        $folderComponent->setLog($this->getLog());
+        $folderComponent->omitField('parent');
+        $folderComponent->omitField('assets');
+        $folderComponent->omitField('orderIndex');
+
+        $form = $this->createFormBuilder($data);
+        $form->setId('form-asset-folder');
+        $form->addRow('folder', 'component', array(
+            'component' => $folderComponent,
+            'embed' => true,
         ));
         $form = $form->build();
 
@@ -576,7 +583,9 @@ class AssetController extends AbstractController {
             try {
                 $form->validate();
 
-                $folder = $form->getData();
+                $data = $form->getData();
+
+                $folder = $data['folder'];
                 $folder->setLocale($locale);
 
                 $folderModel->save($folder);
