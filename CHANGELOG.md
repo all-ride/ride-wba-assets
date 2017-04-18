@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.2] - 2017-04-18
+### Updated
+- process the folder form view to get the wysiwyg
+
 ## [1.2.1] - 2017-04-18
 ### Updated
 - use scaffold form component for folders
