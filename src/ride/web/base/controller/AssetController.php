@@ -601,7 +601,7 @@ class AssetController extends AbstractController {
         }
 
         // set the view
-        $this->setTemplateView('assets/folder', array(
+        $view = $this->setTemplateView('assets/folder', array(
             'form' => $form->getView(),
             'folder' => $folder,
             'breadcrumbs' => $folderModel->getBreadcrumbs($breadcrumbsFolder, $this->chroot),
@@ -610,6 +610,8 @@ class AssetController extends AbstractController {
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
         ));
+
+        $form->processView($view);
     }
 
     /**
