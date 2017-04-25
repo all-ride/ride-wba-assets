@@ -1055,7 +1055,7 @@ class AssetController extends AbstractController {
             $this->chroot = $model->getFolder($user->getUserName(), $locale, true);
             if (!$this->chroot) {
                 // fetch users folder
-                $usersModel = $model->getFolder(self::FOLDER_USERS, $locale, true);
+                $usersFolder = $model->getFolder(self::FOLDER_USERS, $locale, true);
                 if (!$usersFolder) {
                     // create users folder
                     $usersFolder = $model->createEntry();
