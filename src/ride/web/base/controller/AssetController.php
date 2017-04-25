@@ -537,7 +537,7 @@ class AssetController extends AbstractController {
 
             $parent = $this->request->getQueryParameter('folder');
             if ($parent) {
-                $parent = $folderModel->getFolder($parent);
+                $parent = $folderModel->getFolder($parent, $locale, true);
                 if ($parent) {
                     $parent = $this->applyChroot($folderModel, $parent, $locale);
                 }
@@ -626,7 +626,7 @@ class AssetController extends AbstractController {
         $assetModel = $orm->getAssetModel();
 
         if ($folder) {
-            $folder = $folderModel->getFolder($folder, $locale);
+            $folder = $folderModel->getFolder($folder, $locale, true);
             if ($folder) {
                 $folder = $this->applyChroot($folderModel, $folder, $locale);
             }
@@ -658,7 +658,7 @@ class AssetController extends AbstractController {
     public function folderDeleteAction(OrmManager $orm, $locale, $folder) {
         $folderModel = $orm->getAssetFolderModel();
 
-        $folder = $folderModel->getFolder($folder);
+        $folder = $folderModel->getFolder($folder, $locale, true);
         if ($folder) {
             $folder = $this->applyChroot($folderModel, $folder, $locale);
         }
