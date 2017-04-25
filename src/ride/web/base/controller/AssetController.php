@@ -11,6 +11,7 @@ use ride\library\media\exception\UnsupportedMediaException;
 use ride\library\orm\OrmManager;
 use ride\library\system\file\browser\FileBrowser;
 use ride\library\validation\exception\ValidationException;
+use ride\library\StringHelper;
 
 use ride\service\AssetService;
 use ride\service\OrmService;
@@ -761,7 +762,7 @@ class AssetController extends AbstractController {
 
             $folder = $asset->getFolder();
             if (!$folder) {
-                $folder = $folderModel->getFolder(null, $locale);
+                $folder = $folderModel->getFolder(null, $locale, true);
             }
 
             // secure assets in chrooted folders
@@ -775,7 +776,7 @@ class AssetController extends AbstractController {
             $asset = $assetModel->createEntry();
 
             $folder = $this->request->getQueryParameter('folder');
-            $folder = $folderModel->getFolder($folder, $locale);
+            $folder = $folderModel->getFolder($folder, $locale, true);
             if ($folder) {
                 $folder = $this->applyChroot($folderModel, $folder, $locale);
             }
@@ -1052,7 +1053,8 @@ class AssetController extends AbstractController {
             // no restriction, root folder
             $this->chroot = $model->getFolder(null, $locale, true);
         } else {
-            $this->chroot = $model->getFolder($user->getUserName(), $locale, true);
+            $username = str_replace('.', '', StringHelper::safeString($user->getUserName()));
+            $this->chroot = $model->getFolder($username, $locale, true);
             if (!$this->chroot) {
                 // fetch users folder
                 $usersFolder = $model->getFolder(self::FOLDER_USERS, $locale, true);

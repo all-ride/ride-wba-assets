@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.5] - 2017-04-25
+### Updated
+- fixed searching on username when chrooting by escaping the username
+
 ## [1.2.4] - 2017-04-25
 ### Updated
 - fixed fetching of unlocalized parent folder when managing folders
