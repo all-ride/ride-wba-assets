@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.4] - 2017-04-25
+### Updated
+- fixed fetching of unlocalized parent folder when managing folders
+
+## [1.2.3] - 2017-04-20
+### Updated
+- fixed variable typo
+
 ## [1.2.2] - 2017-04-18
 ### Updated
 - process the folder form view to get the wysiwyg
