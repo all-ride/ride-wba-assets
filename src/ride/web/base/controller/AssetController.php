@@ -124,7 +124,7 @@ class AssetController extends AbstractController {
         $selected = $this->request->getQueryParameter('selected');
 
         $views = array('grid', 'list');
-        $view = $this->request->getQueryParameter('view', 'grid');
+        $view = $this->request->getQueryParameter('view', $this->getConfig()->get('assets.view', 'grid'));
         if (!in_array($view, $views)) {
             $view = 'grid';
         }
