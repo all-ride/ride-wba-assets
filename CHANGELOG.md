@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.0] - 2017-09-08
+### Added
+- parameter for the default view
+
 ## [1.2.5] - 2017-04-25
 ### Updated
 - fixed searching on username when chrooting by escaping the username
