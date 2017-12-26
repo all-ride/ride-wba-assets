@@ -909,6 +909,7 @@ class AssetController extends AbstractController {
             'dimension' => $assetModel->getDimension($asset),
             'locales' => $i18n->getLocaleCodeList(),
             'locale' => $locale,
+            'maxSize' => $this->config->get('asset.upload.size.max')
         ));
 
         $form->processView($view);
