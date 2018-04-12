@@ -437,15 +437,16 @@ class AssetController extends AbstractController {
 
         // where to go from here?
         $referer = $this->request->getQueryParameter('referer');
-        if (!$referer) {
-            $referer = $this->getUrl('assets.folder.overview', array(
-                'locale' => $locale,
-                'folder' => $destination->getId(),
-            ));
-        }
 
         if (!$folders && !$assets) {
             // nothing to do here
+            if (!$referer) {
+                $referer = $this->getUrl('assets.overview.locale', array(
+                    'locale' => $locale,
+                ));
+            }
+
+
             $this->response->setRedirect($referer);
 
             return;
@@ -487,6 +488,13 @@ class AssetController extends AbstractController {
                 }
 
                 $this->addSuccess('success.assets.moved');
+
+                if (!$referer) {
+                    $referer = $this->getUrl('assets.folder.overview', array(
+                        'locale' => $locale,
+                        'folder' => $destination->getId(),
+                    ));
+                }
 
                 $this->response->setRedirect($referer);
 

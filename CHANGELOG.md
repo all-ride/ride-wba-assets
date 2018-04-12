@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.1] - 2018-04-12
+### Updated
+- fixed destination reference in move action
+
 ## [1.3.0] - 2017-09-08
 ### Added
 - parameter for the default view
