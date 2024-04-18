@@ -24,6 +24,8 @@ class AssetComponent extends AbstractComponent {
      */
     protected $validationFactory;
 
+    protected $data;
+
     /**
      * Constructs a new AssetComponent
      * @param \ride\library\system\file\File $directory
